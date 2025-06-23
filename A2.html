@@ -17,7 +17,7 @@
             --bg-color: #f4f7f6;
             --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             --border-radius: 6px;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Increased shadow visibility */
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         /* Estilo Base */
@@ -39,6 +39,8 @@
             max-width: 1200px;
             padding: 1rem;
             margin: 0 auto; /* Centra o container principal */
+            display: flex; /* Use flexbox for main content + sidebar */
+            flex-direction: column; /* Default to column for small screens */
         }
 
         /* Classes de Utilidade */
@@ -117,12 +119,12 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 300px;
+            width: 250px; /* Adjusted for smaller screens */
             height: 100%;
             background-color: white;
             box-shadow: var(--box-shadow);
             padding: 60px 1.5rem 1.5rem;
-            transform: translateX(-300px);
+            transform: translateX(-250px); /* Adjusted width */
             transition: transform 0.3s ease-in-out;
             z-index: 1001;
         }
@@ -152,10 +154,16 @@
         }
 
         /* Tabelas */
+        .table-responsive {
+            overflow-x: auto; /* Make tables horizontally scrollable on small screens */
+            -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
+            min-width: 600px; /* Ensure table has a minimum width to enable scrolling */
         }
         th, td {
             padding: 0.75rem 1rem;
@@ -166,20 +174,14 @@
             background-color: var(--light-color);
             font-weight: bold;
         }
-
-        /* Efeito Zebra para linhas alternadas */
+        /* Efeito Zebra */
         tbody tr:nth-child(even) {
-            background-color: #f2f2f2; /* Cor mais clara para linhas pares */
+            background-color: #f2f2f2; /* Cor mais escura para linhas pares */
+        }
+        tbody tr:hover {
+            background-color: #e0e0e0; /* Hover effect */
         }
 
-        tbody tr:nth-child(odd) {
-            background-color: #ffffff; /* Garante que linhas ímpares sejam brancas */
-        }
-        
-        tbody tr:hover {
-            background-color: #e0e0e0; /* Mantém o hover com uma cor diferente para se destacar */
-        }
-        
         td[contenteditable="true"] {
             background-color: #fffbe6;
             outline: 1px dashed var(--warning-color);
@@ -233,6 +235,7 @@
             margin-right: 5px;
             padding: 0.5rem;
             font-size: 0.8rem;
+            margin-bottom: 5px; /* Added for better stacking on small screens */
         }
 
         /* Formulários e Inputs */
@@ -244,7 +247,7 @@
             margin-bottom: 0.5rem;
             font-weight: 500;
         }
-        input[type="text"], input[type="password"], input[type="date"] {
+        input[type="text"], input[type="password"], input[type="date"], input[type="number"], select {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid #ccc;
@@ -270,7 +273,7 @@
         }
 
         /* Janela Modal */
-        #client-modal {
+        #client-modal, #contract-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -281,6 +284,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 1rem; /* Added padding for small screens */
         }
         .modal-content {
             background-color: white;
@@ -290,6 +294,8 @@
             width: 90%;
             max-width: 500px;
             position: relative;
+            max-height: 90vh; /* Prevent modal from overflowing on very small screens */
+            overflow-y: auto; /* Enable scrolling for modal content if needed */
         }
         .modal-close {
             position: absolute;
@@ -314,8 +320,8 @@
             margin-bottom: 2rem;
             font-family: 'Courier New', Courier, monospace;
             background-color: #fff;
-            border-radius: var(--border-radius); /* Apply rounded corners */
-            box-shadow: var(--box-shadow); /* Apply visible shadow */
+            border-radius: var(--border-radius); /* Arredondado */
+            box-shadow: var(--box-shadow); /* Sombra */
         }
         .receipt-header {
             text-align: center;
@@ -339,7 +345,9 @@
             min-width: 90px;
         }
         .receipt-body table {
+            width: 100%;
             font-size: 0.9rem;
+            border-collapse: collapse;
             border: 1px solid var(--dark-color);
         }
         .receipt-body table th,
@@ -348,7 +356,7 @@
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-        .receipt-body table th {
+        thead th {
             background-color: var(--light-color);
             font-weight: bold;
         }
@@ -380,7 +388,7 @@
         }
 
 
-        /* --- INÍCIO: ESTILOS DE IMPRESSÃO CORRIGIDOS --- */
+        /* --- INÍCIO: ESTILOS DE IMPRESSÃO --- */
         @media print {
             /* 1. Oculta todos os elementos que estão diretamente no <body> */
             body > * {
@@ -388,8 +396,6 @@
             }
 
             /* 2. Mostra o contentor da aplicação e o caminho até à secção de recibos */
-            /* Estes são necessários se você quiser que a visualização de recibos no ecrã seja a mesma que a impressão */
-            /* Para a abordagem de nova janela, estes podem não ser estritamente necessários, mas são boa prática */
             #app, main, #receipts-view {
                 display: block !important;
             }
@@ -416,19 +422,18 @@
                 margin: 0 auto !important; /* Centraliza na página A4 */
             }
 
-            /* 6. A linha divisória agora é visível na impressão da página principal */
+            /* 6. A linha divisória para a seção de recibos deverá estar visível na impressão */
             .invoice-divider {
-                display: block !important; /* Torna a linha visible na impressão */
-                border: none; /* Reset para evitar bordas duplas se já tiverem */
-                border-top: 2px dashed var(--secondary-color); /* Estilo da linha */
-                margin: 2rem auto !important; /* Ajusta a margem para impressão */
+                display: block !important; /* Changed from none to block */
+                margin: 2rem 0 !important; /* Ensure it has space */
+                border-top: 2px dashed var(--secondary-color) !important; /* Make sure it's dashed and visible */
             }
 
             /* 7. Estilo principal para cada recibo na impressão (usado na nova janela de impressão) */
             .recibo-popup {
-                width: 19cm !important; /* Largura ajustada para caber na A4 com margens */
-                height: 12.8cm !important; /* Altura calculada para dois recibos na A4 (29.7cm / 2 = 14.85cm. Ajustado para caber com pequenas margens) */
-                margin: 0.8cm auto !important; /* Margem superior/inferior para separação entre os dois recibos */
+                width: 21cm !important; /* Largura total da folha A4 */
+                height: 12.8cm !important; /* Altura ajustada para caber dois por página */
+                margin: 0.8cm 0 0.4cm !important; /* Margem superior, sem margens laterais, e inferior reduzida */
                 border: 1px solid black !important;
                 padding: 20px !important; /* Padding do recibo */
                 box-sizing: border-box !important;
@@ -436,14 +441,12 @@
                 position: relative !important;
                 page-break-after: auto !important; /* CRÍTICO: Não forçar quebras de página após CADA recibo na nova janela */
                 page-break-inside: avoid; /* Prevent breaking a receipt in half */
-                border-radius: var(--border-radius) !important; /* Apply rounded corners for print */
-                box-shadow: none !important; /* Remove shadow for print to save ink, or keep if desired */
             }
 
             /* Se houver mais de 2 recibos, o ideal é que cada par se ajuste */
             /* Para 2 recibos por página, esta regra é fundamental */
             .recibo-popup:nth-child(even) { /* Para o segundo recibo em cada par */
-                margin-top: 0.8cm !important; /* Espaço entre o primeiro e o segundo recibo na mesma página */
+                /* margin-top: 0.8cm !important; */ /* This can be removed, as the general margin and divider will handle spacing */
             }
             
             /* Ajustar os tamanhos de fonte para o recibo ficar mais compacto na impressão */
@@ -457,9 +460,6 @@
                 font-size: 10pt;
                 line-height: 1.2;
             }
-            .recibo-popup .checklist h4, .recibo-popup .assinatura {
-                font-size: 10pt;
-            }
             .recibo-popup .checklist label {
                 font-size: 9pt;
             }
@@ -468,17 +468,18 @@
             }
             .carimbo-overlay {
                 top: -35px !important; /* Ajuste a posição vertical do carimbo para impressão */
-                margin-left: 55px !important; /* Ajuste a posição horizontal do carimbo para impressão */
+                left: 50%; /* Centraliza horizontalmente */
+                transform: translateX(-50%); /* Ajuste fino para centralizar */
                 width: 150px !important; /* Pode ser necessário ajustar o tamanho do carimbo */
             }
 
-            /* Estilo da nova linha HR para impressão na nova janela de impressão */
+            /* Estilo da nova linha HR para impressão */
             .receipt-divider-print {
                 border: none;
                 border-top: 1px dashed #999; /* Linha tracejada suave */
-                margin: 0.5cm auto; /* Margem para separar os recibos */
-                width: 80%; /* Largura da linha divisória */
-                display: block; /* Garante que a linha é visible na impressão */
+                margin: 0.4cm auto !important; /* Margem para separar os recibos */
+                width: 80% !important; /* Largura da linha divisória */
+                display: block !important; /* Garante que a linha é visível na impressão */
             }
 
             /* Outros ajustes finos para tabelas dentro do recibo, se aplicável */
@@ -499,6 +500,35 @@
             .receipt-footer p {
                 margin-bottom: 0 !important;
             }
+            /* Explicitly set for print to ensure row layout */
+            .recibo-popup .assinatura-checklist-container {
+                flex-direction: row !important; /* Force side-by-side for print */
+                justify-content: space-between !important;
+                align-items: flex-start !important;
+            }
+            .recibo-popup .checklist,
+            .recibo-popup .assinatura {
+                width: 48% !important; /* Ensure they share space */
+                margin-bottom: 0 !important;
+            }
+            .recibo-popup .assinatura {
+                text-align: right !important; /* Align signature text to the right for print */
+            }
+
+            /* Novo estilo para o topo da seção de pagamento/assinatura no recibo de impressão */
+            .recibo-popup .receipt-top-info {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: flex-end !important; /* Alinhar texto com a parte de baixo */
+                font-weight: bold !important;
+                font-size: 10pt !important; /* Ajuste o tamanho da fonte para impressão */
+                margin-bottom: 5px !important; /* Espaço entre o cabeçalho e os checkboxes */
+            }
+
+            .recibo-popup .receipt-top-info .assinatura-header-print {
+                margin-top: 0 !important; /* Remover margem extra no topo */
+                margin-bottom: 0 !important; /* Remover margem extra no rodapé */
+            }
         }
         /* --- FIM: ESTILOS DE IMPRESSÃO --- */
 
@@ -511,8 +541,6 @@
             box-sizing: border-box;
             font-family: monospace;
             position: relative;
-            border-radius: var(--border-radius); /* Apply rounded corners */
-            box-shadow: var(--box-shadow); /* Apply visible shadow */
         }
 
         .recibo-popup .cabecalho {
@@ -542,6 +570,12 @@
             text-align: right;
             position: relative; /* Adicionado para posicionamento do carimbo */
         }
+        /* Estilo para o texto "Assinatura e carimbo" */
+        .recibo-popup .assinatura span {
+            font-weight: bold; /* Deixar o texto em negrito */
+            font-size: 1rem; /* Pode ajustar o tamanho da fonte */
+        }
+
 
         .recibo-popup .assinatura-maquina {
             margin-top: 30px;
@@ -552,18 +586,43 @@
             margin-top: 10px;
             text-align: left;
         }
+        /* Estilo para o texto "Forma de pagamento" */
+        .recibo-popup .checklist span.payment-form-header {
+            font-weight: bold; /* Deixar o texto em negrito */
+            font-size: 1rem; /* Pode ajustar o tamanho da fonte */
+        }
+
 
         .recibo-popup .assinatura-checklist-container {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            flex-direction: row; /* Change to row for side-by-side */
+            justify-content: space-between; /* Pushes items to the ends */
+            align-items: flex-start; /* Aligns them to the top of the container */
             margin-top: 30px;
         }
 
         .recibo-popup .checklist,
         .recibo-popup .assinatura {
-            width: 48%;
+            width: 48%; /* Give them approximately half width to sit side-by-side */
+            margin-bottom: 0; /* Remove bottom margin when side-by-side */
         }
+        .recibo-popup .assinatura {
+            text-align: right; /* Align signature text to the right */
+        }
+
+        /* Novo estilo para o topo da seção de pagamento/assinatura no recibo */
+        .recibo-popup .receipt-top-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end; /* Alinhar o texto com a parte de baixo */
+            margin-bottom: 10px; /* Espaço entre o cabeçalho e os checkboxes */
+            font-weight: bold; /* Deixar o texto em negrito */
+        }
+        .recibo-popup .receipt-top-info .assinatura-header {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
 
         .fill-underline {
             font-family: monospace;
@@ -609,269 +668,141 @@
             margin-left: 64.26px; /* Original 113.4px - 49.14px = 64.26px (1.3cm para a esquerda) */
         }
 
-        /* Search input styling */
-        .search-container {
-            margin-bottom: 1rem;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .search-container input[type="text"] {
-            flex-grow: 1;
-            padding: 0.75rem;
-            border: 1px solid #ccc;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-        }
 
-        /* Styles for Contract Management */
-        #contracts-view table {
-            margin-top: 1rem;
-        }
-        #contracts-view th, #contracts-view td {
-            padding: 0.75rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        #contracts-view thead th {
-            background-color: var(--light-color);
-            font-weight: bold;
-        }
-        .payment-entry {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-bottom: 5px;
-        }
-        .payment-entry input[type="number"] {
-            width: 80px;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .payment-entry .payment-date {
-            font-size: 0.9em;
-            color: var(--secondary-color);
-        }
-        .add-contract-form {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        .add-contract-form select,
-        .add-contract-form input[type="number"] {
-            padding: 0.75rem;
-            border: 1px solid #ccc;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-        }
-        .add-contract-form button {
-            padding: 0.75rem 1.25rem;
-            border-radius: var(--border-radius);
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-        .contract-total {
-            font-weight: bold;
-            color: var(--primary-color);
-        }
+        /* --- RESPONSIVIDADE --- */
 
-
-        /* --- MEDIA QUERIES PARA RESPONSIVIDADE --- */
-
-        /* Ecrãs pequenos (smartphones) */
+        /* Pequenas telas (smartphones) */
         @media (max-width: 768px) {
-            body {
-                padding-top: 60px; /* Ajuste para o cabeçalho menor */
-            }
-
-            header {
-                padding: 0.75rem;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                height: 60px; /* Altura fixa para cabeçalho em mobile */
-            }
-
             header h1 {
                 font-size: 1.2rem;
                 padding-left: 0.5rem;
             }
-
             header button {
                 margin-right: 0.5rem;
             }
+            
+            #app {
+                padding: 0.5rem;
+            }
 
+            main section {
+                padding: 1rem;
+                margin-top: 1rem;
+            }
+
+            /* Search input on top of tables */
+            #clients-view div, #payments-view div {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            #client-search-clients, #client-search-payments {
+                width: 100% !important; /* Override inline style */
+                margin-top: 10px;
+            }
+
+            /* Adjust button padding and font for smaller screens */
+            button, .button {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+            .actions-cell .action-buttons button {
+                padding: 0.4rem;
+                font-size: 0.75rem;
+            }
+
+            /* Receipts container */
+            #receipts-container {
+                padding: 0.5rem;
+            }
+
+            .recibo-popup .cabecalho {
+                flex-direction: column;
+                align-items: flex-start;
+                margin-bottom: 10px;
+            }
+            .recibo-popup .recibo-num {
+                text-align: left;
+                margin-top: 10px;
+            }
+            .recibo-popup .assinatura-checklist-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .recibo-popup .checklist,
+            .recibo-popup .assinatura {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            .recibo-popup .assinatura {
+                text-align: left; /* Align signature left when stacked */
+            }
+            .carimbo-overlay {
+                top: auto !important; /* Reset top for mobile view */
+                bottom: -20px; /* Position relative to signature area */
+                left: 10px !important; /* Align left with text */
+                transform: translateX(0) !important;
+                width: 100px !important; /* Smaller stamp on mobile */
+                margin-left: 0 !important;
+            }
+            /* Adjust for stacked layout on small screens */
+            .recibo-popup .receipt-top-info {
+                flex-direction: column;
+                align-items: flex-start;
+                margin-bottom: 5px;
+            }
+            .recibo-popup .receipt-top-info .assinatura-header {
+                margin-top: 10px; /* Add space when stacked */
+            }
+        }
+
+        /* Médias telas (tablets) */
+        @media (min-width: 769px) and (max-width: 1024px) {
             aside {
-                width: 250px; /* Menu lateral mais estreito em mobile */
-                transform: translateX(-250px);
-                padding-top: 60px; /* Espaço para o cabeçalho fixo */
+                width: 280px;
+                transform: translateX(-280px);
             }
             aside.open {
                 transform: translateX(0);
             }
-
             #app {
-                padding: 0.5rem; /* Padding menor no container principal */
-            }
-
-            main section {
-                padding: 1rem; /* Padding menor nas seções */
-                margin-top: 1rem;
-            }
-
-            /* Ajustes para tabelas em ecrãs pequenos */
-            table, thead, tbody, th, td, tr {
-                display: block;
-            }
-
-            thead tr {
-                position: absolute;
-                top: -9999px;
-                left: -9999px;
-            }
-
-            tr {
-                border: 1px solid #ccc;
-                margin-bottom: 1rem;
-                border-radius: var(--border-radius);
-            }
-
-            td {
-                border: none;
-                border-bottom: 1px solid #eee;
-                position: relative;
-                padding-left: 50%; /* Espaço para o label antes do conteúdo */
-                text-align: right;
-            }
-
-            td:last-child {
-                border-bottom: 0;
-            }
-
-            td:before {
-                position: absolute;
-                top: 6px;
-                left: 6px;
-                width: 45%;
-                padding-right: 10px;
-                white-space: nowrap;
-                text-align: left;
-                font-weight: bold;
-            }
-
-            /* Data-labels para cada coluna da tabela */
-            #clients-table-body td:nth-of-type(1):before { content: "Nº Cliente:"; }
-            #clients-table-body td:nth-of-type(2):before { content: "Nome:"; }
-            #clients-table-body td:nth-of-type(3):before { content: "Contacto:"; }
-            #clients-table-body td:nth-of-type(4):before { content: "Ligação:"; }
-            #clients-table-body td:nth-of-type(5):before { content: "Situação:"; }
-            #clients-table-body td:nth-of-type(6):before { content: "Ações:"; }
-
-            #invoices-table-body td:nth-of-type(1):before { content: "Nome Cliente:"; }
-            #invoices-table-body td:nth-of-type(2):before { content: "Leitura Anterior:"; }
-            #invoices-table-body td:nth-of-type(3):before { content: "Leitura Atual:"; }
-            #invoices-table-body td:nth-of-type(4):before { content: "Consumo:"; }
-            #invoices-table-body td:nth-of-type(5):before { content: "Dívida:"; }
-            #invoices-table-body td:nth-of-type(6):before { content: "Valor a Pagar:"; }
-
-            #payments-table-body td:nth-of-type(1):before { content: "Nº Cliente:"; }
-            #payments-table-body td:nth-of-type(2):before { content: "Nome Cliente:"; }
-            #payments-table-body td:nth-of-type(3):before { content: "Valor Total:"; }
-            #payments-table-body td:nth-of-type(4):before { content: "1º Pagamento:"; }
-            #payments-table-body td:nth-of-type(5):before { content: "2º Pagamento:"; }
-            #payments-table-body td:nth-of-type(6):before { content: "3º Pagamento:"; }
-            #payments-table-body td:nth-of-type(7):before { content: "Valor em Falta:"; }
-            #payments-table-body td:nth-of-type(8):before { content: "Comprovativo:"; }
-
-            /* Contract table data labels */
-            #contracts-table-body td:nth-of-type(1):before { content: "Nº Cliente:"; }
-            #contracts-table-body td:nth-of-type(2):before { content: "Nome Cliente:"; }
-            #contracts-table-body td:nth-of-type(3):before { content: "Valor Contrato:"; }
-            #contracts-table-body td:nth-of-type(4):before { content: "Pagamentos:"; }
-            #contracts-table-body td:nth-of-type(5):before { content: "Valor em Falta:"; }
-
-            /* Ajustes específicos para células de ações em tabelas responsivas */
-            .actions-cell {
-                text-align: left; /* Alinha o botão de toggle para a esquerda */
-            }
-            .actions-cell > button {
-                width: auto;
-                margin-left: 50%; /* Move o botão para a direita do label */
-            }
-            .actions-cell .action-buttons {
-                display: flex; /* Exibe os botões em linha */
-                flex-wrap: wrap; /* Permite quebrar linha se não houver espaço */
-                gap: 5px; /* Espaçamento entre os botões */
-                justify-content: flex-end; /* Alinha os botões à direita */
-                margin-top: 5px;
-            }
-            .actions-cell .action-buttons button {
-                width: auto; /* Permite que os botões se ajustem ao conteúdo */
-                flex-grow: 1; /* Permite que os botões cresçam para preencher o espaço */
-                text-align: center;
-            }
-
-            .situacao-select {
-                width: 100%; /* Ocupa toda a largura disponível */
-                margin-left: 50%; /* Alinha com o conteúdo */
-            }
-
-            /* Ajustes para o modal em ecrãs pequenos */
-            .modal-content {
-                width: 95%;
                 padding: 1rem;
             }
-
-            .search-container {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .search-container input[type="text"],
-            .search-container button {
-                width: 100%;
-            }
-
-            .add-contract-form {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .add-contract-form select,
-            .add-contract-form input[type="number"],
-            .add-contract-form button {
-                width: 100%;
+            main section {
+                padding: 1.2rem;
             }
         }
 
-        /* Ecrãs médios (tablets) */
-        @media (min-width: 769px) and (max-width: 1024px) {
+        /* Telas grandes (desktops) */
+        @media (min-width: 1025px) {
             #app {
-                padding: 1.5rem;
+                display: block; /* Revert to block for desktop */
             }
-
-            main section {
-                padding: 1.25rem;
+            aside {
+                position: fixed; /* Keep fixed for overlay behavior */
+                width: 300px; /* Original width */
+                transform: translateX(-300px); /* Original transform */
             }
-
-            /* As tabelas podem ter um scroll horizontal em tablets se o conteúdo for muito extenso */
-            table {
-                display: block;
-                overflow-x: auto;
-                white-space: nowrap; /* Impede a quebra de linha dentro das células */
+            aside.open {
+                transform: translateX(0);
             }
-            thead, tbody, th, td, tr {
-                white-space: normal; /* Restaura a quebra de linha normal para as células */
+            /* Restore original flex for signature/checklist for larger screens */
+            .recibo-popup .assinatura-checklist-container {
+                flex-direction: row;
             }
-            td:before {
-                content: none; /* Remove os labels extras introduzidos para mobile */
-            }
-            tr {
-                border: none; /* Remove a borda para restaurar o estilo normal da tabela */
+            .recibo-popup .checklist,
+            .recibo-popup .assinatura {
+                width: 48%;
                 margin-bottom: 0;
+            }
+            .recibo-popup .assinatura {
+                text-align: right;
+            }
+            .carimbo-overlay {
+                top: -42.8px !important; /* Revert to original position */
+                left: 50% !important; /* Revert to original position */
+                transform: translateX(-50%) !important;
+                width: 170px !important; /* Revert to original size */
+                margin-left: 64.26px !important; /* Revert to original position */
             }
         }
     </style>
@@ -900,33 +831,34 @@
             <button data-view="clients-view">Ver Clientes</button>
             <button data-view="invoices-view">Ver Faturas</button>
             <button data-view="payments-view">Ver Pagamentos</button>
+            <button data-action="add-contract">Adicionar Contrato</button>
+            <button data-view="contracts-view">Ver Contratos</button>
             <button data-view="receipts-view">Gerar Recibos</button>
-            <button data-view="contracts-view">Dívidas Contratuais</button>
         </section>
     </aside>
 
     <div id="app">
         <main>
             <section id="clients-view">
-                <h2>Clientes</h2>
-                <div class="search-container">
-                    <input type="text" id="search-client-input-clients-view" placeholder="Pesquisar cliente por nome ou ID...">
-                    <button id="search-client-button-clients-view" class="btn-primary">Pesquisar</button>
-                    <button id="clear-search-button-clients-view" class="btn-secondary">Limpar</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Clientes</h2>
+                    <input type="text" id="client-search-clients" placeholder="Pesquisar por nome ou ID..." style="width: 50%;">
                 </div>
-                <table id="clients-table">
-                    <thead>
-                        <tr>
-                            <th>Nº Cliente</th>
-                            <th>Nome</th>
-                            <th>Contacto</th>
-                            <th>Data da Ligação</th>
-                            <th>Situação</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clients-table-body"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table id="clients-table">
+                        <thead>
+                            <tr>
+                                <th>Nº Cliente</th>
+                                <th>Nome</th>
+                                <th>Contacto</th>
+                                <th>Data da Ligação</th>
+                                <th>Situação</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-table-body"></tbody>
+                    </table>
+                </div>
             </section>
 
             <section id="invoices-view" class="hidden">
@@ -934,86 +866,83 @@
                     <h2>Gestão de Faturas</h2>
                     <button id="new-month-button" class="btn-warning">🚀 Novo Mês</button>
                 </div>
-                <table id="invoices-table">
-                    <thead>
-                        <tr>
-                            <th>Nome Cliente</th>
-                            <th>Leitura Anterior (m³)</th>
-                            <th>Leitura Atual (m³)</th>
-                            <th>Consumo (m³)</th>
-                            <th>Dívida (MZN)</th>
-                            <th>Valor a Pagar (MZN)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="invoices-table-body"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table id="invoices-table">
+                        <thead>
+                            <tr>
+                                <th>Nome Cliente</th>
+                                <th>Leitura Anterior (m³)</th>
+                                <th>Leitura Atual (m³)</th>
+                                <th>Consumo (m³)-</th>
+                                <th>Dívida (MZN)</th>
+                                <th>Valor a Pagar (MZN)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoices-table-body"></tbody>
+                    </table>
+                </div>
             </section>
 
             <section id="payments-view" class="hidden">
-                <h2>Gestão de Pagamentos</h2>
-                <div class="search-container">
-                    <input type="text" id="search-client-input" placeholder="Pesquisar cliente por nome ou ID...">
-                    <button id="search-client-button" class="btn-primary">Pesquisar</button>
-                    <button id="clear-search-button" class="btn-secondary">Limpar</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Gestão de Pagamentos</h2>
+                    <input type="text" id="client-search-payments" placeholder="Pesquisar por nome ou ID..." style="width: 50%;">
                 </div>
-                <table id="payments-table">
-                    <thead>
-                        <tr>
-                            <th>Nº Cliente</th>
-                            <th>Nome Cliente</th>
-                            <th>Valor Total (MZN)</th>
-                            <th>1º Pagamento (MZN)</th>
-                            <th>2º Pagamento (MZN)</th>
-                            <th>3º Pagamento (MZN)</th>
-                            <th>Valor em Falta (MZN)</th>
-                            <th>Comprovativo</th>
-                        </tr>
-                    </thead>
-                    <tbody id="payments-table-body"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table id="payments-table">
+                        <thead>
+                            <tr>
+                                <th>Nome Cliente</th>
+                                <th>Valor Total (MZN)</th>
+                                <th>1º Pagamento (MZN)</th>
+                                <th>2º Pagamento (MZN)</th>
+                                <th>3º Pagamento (MZN)</th>
+                                <th>Valor em Falta (MZN)</th>
+                                <th>Comprovativo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payments-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="contracts-view" class="hidden">
+                <h2>Dívidas Contratuais</h2>
+                <div class="table-responsive">
+                    <table id="contracts-table">
+                        <thead>
+                            <tr>
+                                <th>Nº Contrato</th>
+                                <th>Nº Cliente</th>
+                                <th>Nome Cliente</th>
+                                <th>Valor Contrato (MZN)</th>
+                                <th>1º Pagamento (MZN)</th>
+                                <th>2º Pagamento (MZN)</th>
+                                <th>3º Pagamento (MZN)</th>
+                                <th>Valor em Falta (MZN)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contracts-table-body"></tbody>
+                    </table>
+                </div>
             </section>
 
             <section id="receipts-view" class="hidden">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2>Recibos Gerados</h2>
-                    <button id="print-receipts-button" class="btn-primary">Imprimir</button>
+                    <button id="print-receipts-button" class="btn-primary">Imprimir (Não Usar)</button>
                 </div>
                 <div id="receipts-container">
                     </div>
-            </section>
-
-            <section id="contracts-view" class="hidden">
-                <h2>Dívidas Contratuais</h2>
-                <div class="add-contract-form">
-                    <label for="contract-client-select">Selecionar Cliente:</label>
-                    <select id="contract-client-select">
-                        <option value="">-- Selecione um Cliente --</option>
-                    </select>
-                    <label for="contract-value-input">Valor do Contrato (MZN):</label>
-                    <input type="number" id="contract-value-input" value="5000" min="0" step="0.01" required>
-                    <button id="add-contract-button" class="btn-success">Adicionar Contrato</button>
-                </div>
-                <table id="contract-table">
-                    <thead>
-                        <tr>
-                            <th>Nº Cliente</th>
-                            <th>Nome Cliente</th>
-                            <th>Valor do Contrato (MZN)</th>
-                            <th>Pagamentos do Contrato (MZN)</th>
-                            <th>Valor em Falta (MZN)</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="contract-table-body"></tbody>
-                </table>
             </section>
         </main>
     </div>
 
     <div id="client-modal" class="hidden">
         <div class="modal-content">
-            <button class="modal-close" id="close-modal-button">&times;</button>
-            <h3 id="modal-title">Adicionar Cliente</h3>
+            <button class="modal-close" id="close-client-modal-button">&times;</button>
+            <h3 id="client-modal-title">Adicionar Cliente</h3>
             <form id="client-form">
                 <input type="hidden" id="client-id">
                 <div class="form-group">
@@ -1036,6 +965,25 @@
         </div>
     </div>
 
+    <div id="contract-modal" class="hidden">
+        <div class="modal-content">
+            <button class="modal-close" id="close-contract-modal-button">&times;</button>
+            <h3 id="contract-modal-title">Adicionar Contrato</h3>
+            <form id="contract-form">
+                <input type="hidden" id="contract-id">
+                <div class="form-group">
+                    <label for="contract-client-select">Cliente</label>
+                    <select id="contract-client-select" style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: var(--border-radius);" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="contract-value">Valor do Contrato (MZN)</label>
+                    <input type="number" id="contract-value" value="5000" min="0" step="1" required>
+                </div>
+                <button type="submit" class="btn-success">Salvar Contrato</button>
+            </form>
+        </div>
+    </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // Seletores de elementos do DOM
@@ -1046,44 +994,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const authForm = document.getElementById('auth-form');
     const verificationCodeInput = document.getElementById('verification-code');
     const views = document.querySelectorAll('main > section');
+
     const clientModal = document.getElementById('client-modal');
-    const closeModalButton = document.getElementById('close-modal-button');
+    const closeClientModalButton = document.getElementById('close-client-modal-button');
     const clientForm = document.getElementById('client-form');
-    const modalTitle = document.getElementById('modal-title');
+    const clientModalTitle = document.getElementById('client-modal-title');
     const clientIdInput = document.getElementById('client-id');
     const clientNameInput = document.getElementById('client-name');
     const clientContactInput = document.getElementById('client-contact');
     const clientConnectionDateInput = document.getElementById('client-connection-date');
     const clientsTableBody = document.getElementById('clients-table-body');
+    const clientSearchClients = document.getElementById('client-search-clients');
+
     const invoicesTableBody = document.getElementById('invoices-table-body');
     const paymentsTableBody = document.getElementById('payments-table-body');
+    const clientSearchPayments = document.getElementById('client-search-payments');
+
+    const contractsTableBody = document.getElementById('contracts-table-body');
+    const contractModal = document.getElementById('contract-modal');
+    const closeContractModalButton = document.getElementById('close-contract-modal-button');
+    const contractForm = document.getElementById('contract-form');
+    const contractModalTitle = document.getElementById('contract-modal-title');
+    const contractIdInput = document.getElementById('contract-id'); // Not used for contract ID, but for selected client ID
+    const contractClientSelect = document.getElementById('contract-client-select');
+    const contractValueInput = document.getElementById('contract-value');
+
     const receiptsContainer = document.getElementById('receipts-container');
     const newMonthButton = document.getElementById('new-month-button');
     const printReceiptsButton = document.getElementById('print-receipts-button');
-    const contractClientSelect = document.getElementById('contract-client-select');
-    const contractValueInput = document.getElementById('contract-value-input');
-    const addContractButton = document.getElementById('add-contract-button');
-    const contractTableBody = document.getElementById('contract-table-body');
-
-
-    // Elementos de pesquisa na Gestão de Pagamentos
-    const searchClientInputPayments = document.getElementById('search-client-input');
-    const searchClientButtonPayments = document.getElementById('search-client-button');
-    const clearSearchButtonPayments = document.getElementById('clear-search-button');
-
-    // Elementos de pesquisa na página Clientes
-    const searchClientInputClients = document.getElementById('search-client-input-clients-view');
-    const searchClientButtonClients = document.getElementById('search-client-button-clients-view');
-    const clearSearchButtonClients = document.getElementById('clear-search-button-clients-view');
 
     // Estado da aplicação
-    let state = { clients: [], invoices: {}, payments: {}, contracts: [] }; // Adicionado array de contratos
+    let state = { clients: [], invoices: {}, payments: {}, contracts: {} };
     const FIXED_VERIFICATION_CODE = '123456a';
     let originalCellValue = null;
-    const generatedBinarySignatures = new Set(); // Para armazenar assinaturas binárias únicas
+    const generatedBinarySignatures = new Set(); // To store unique binary signatures
 
     // --- LÓGICA DE SEGURANÇA ---
-    // Função para solicitar um código de verificação antes de executar uma ação sensível
     function requestVerificationCode(onSuccess, onFail = () => {}) {
         const code = prompt("Para realizar esta ação, por favor, insira o código de verificação:");
         if (code === FIXED_VERIFICATION_CODE) {
@@ -1092,33 +1038,45 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Código de verificação incorreto!');
             onFail();
         } else {
-             onFail(); // Usuário cancelou
+             onFail(); // User cancelled prompt
         }
     }
 
     // --- PERSISTÊNCIA ---
-    // Salva os dados do estado da aplicação no Local Storage
     function saveData() {
         localStorage.setItem('waterManagementData', JSON.stringify(state));
     }
 
-    // Carrega os dados do estado da aplicação do Local Storage ou inicializa com dados de exemplo
     function loadData() {
         const data = localStorage.getItem('waterManagementData');
         if (data) {
             state = JSON.parse(data);
-            // Garante que cada cliente tenha uma situação definida (padrão 'A')
+            // Ensure default situacao for old data and correct structure for payments/contracts
             state.clients.forEach(client => {
                 if (client.situacao === undefined) {
                     client.situacao = 'A';
                 }
             });
-            // Garante que o array de contratos exista
-            if (!state.contracts) {
-                state.contracts = [];
+            // Ensure payment objects have amount and date for p1, p2, p3
+            for (const clientId in state.payments) {
+                ['p1', 'p2', 'p3'].forEach(p => {
+                    if (state.payments[clientId][p] === undefined) {
+                        state.payments[clientId][p] = { amount: 0, date: null };
+                    } else if (typeof state.payments[clientId][p] === 'number') { // Convert old number format
+                         state.payments[clientId][p] = { amount: state.payments[clientId][p], date: null };
+                    }
+                });
             }
+             // Ensure contract payment objects have amount and date
+            for (const contractId in state.contracts) {
+                ['p1', 'p2', 'p3'].forEach(p => {
+                    if (state.contracts[contractId].payments[p] === undefined) {
+                        state.contracts[contractId].payments[p] = { amount: 0, date: null };
+                    }
+                });
+            }
+
         } else {
-            // Dados iniciais se não houver nada no Local Storage
             state = {
                 clients: [
                     { id: 1, name: 'António Luís', contact: '841234567', connectionDate: '2023-01-15', situacao: 'A' },
@@ -1135,38 +1093,79 @@ document.addEventListener('DOMContentLoaded', () => {
                     2: { p1: { amount: 600, date: '2025-05-26T11:00:00.000Z' }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } },
                     3: { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } }
                 },
-                contracts: [] // Inicializa contratos
+                contracts: {} // New empty contracts object
             };
         }
     }
 
     // --- FUNÇÃO AUXILIAR DE CÁLCULO ---
-    // Calcula o consumo e o valor total a pagar para uma fatura
     function calculateInvoiceTotals(clientId) {
         const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
-        const hasNewReading = (invoice.currentReading || 0) > 0 && (invoice.currentReading || 0) > (invoice.prevReading || 0);
-        const consumption = Math.max(0, (invoice.currentReading || 0) - (invoice.prevReading || 0));
-        const tariff = hasNewReading ? (consumption <= 5 ? 375 : consumption * 75) : 0;
-        const totalToPay = (invoice.customAmount != null)
-            ? parseFloat(invoice.customAmount)
-            : (parseFloat(invoice.debt) || 0) + tariff;
+        const client = state.clients.find(c => c.id == clientId);
+
+        let consumption = 0;
+        let tariff = 0;
+        let totalToPay = 0; // Initialize totalToPay
+
+        if (client && client.situacao === 'F') { // Cliente Fechado: não calcula consumo, apenas dívida
+            consumption = 0;
+            tariff = 0; // Não há tarifa de consumo para cliente fechado
+            totalToPay = parseFloat(invoice.debt) || 0; // Only debt
+        } else if (client && client.situacao === 'N') { // Cliente com Situação 'N': não calcula consumo, apenas dívida
+            consumption = 0;
+            tariff = 0;
+            totalToPay = parseFloat(invoice.debt) || 0; // Only debt
+        }
+        else if (client && client.situacao === 'A' && (invoice.currentReading || 0) === (invoice.prevReading || 0)) {
+            // Situation A and Consumption is 0
+            consumption = 0;
+            tariff = 0;
+            totalToPay = (parseFloat(invoice.debt) || 0) + 375; // Debt + 375
+        }
+        else {
+            const hasNewReading = (invoice.currentReading || 0) > 0 && (invoice.currentReading || 0) > (invoice.prevReading || 0);
+            consumption = Math.max(0, (invoice.currentReading || 0) - (invoice.prevReading || 0));
+            tariff = hasNewReading ? (consumption <= 5 ? 375 : consumption * 75) : 0;
+            totalToPay = (parseFloat(invoice.debt) || 0) + tariff; // Debt + tariff
+        }
+
+        if (invoice.customAmount != null) {
+            totalToPay = parseFloat(invoice.customAmount); // Use custom amount if available
+        }
 
         return { consumption, tariff, totalToPay };
     }
 
+    function calculateContractTotals(contractId) {
+        const contract = state.contracts[contractId];
+        if (!contract) return { totalPaid: 0, remaining: 0 };
+
+        const totalPaid = (contract.payments.p1.amount || 0) +
+                          (contract.payments.p2.amount || 0) +
+                          (contract.payments.p3.amount || 0);
+        const remaining = contract.value - totalPaid;
+        return { totalPaid, remaining };
+    }
+
 
     // --- RENDERIZAÇÃO ---
-    // Renderiza todas as tabelas na interface
     function renderAllTables() {
         renderClientsTable();
         renderInvoicesTable();
         renderPaymentsTable();
-        renderContractsTable(); // Renderiza a tabela de contratos
+        renderContractsTable();
     }
 
-    // Renderiza a tabela de clientes
-    function renderClientsTable(filteredClients = state.clients) {
+    function renderClientsTable() {
         clientsTableBody.innerHTML = '';
+        const searchTerm = clientSearchClients.value.toLowerCase();
+
+        const filteredClients = state.clients.filter(client => {
+            const matchesName = client.name.toLowerCase().includes(searchTerm);
+            const matchesId = String(client.id).includes(searchTerm);
+            return matchesName || matchesId;
+        });
+
         filteredClients.forEach(client => {
             const row = document.createElement('tr');
             row.dataset.clientId = client.id;
@@ -1195,14 +1194,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Renderiza a tabela de faturas
     function renderInvoicesTable() {
         invoicesTableBody.innerHTML = '';
         state.clients.forEach(client => {
             const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
             const { consumption, totalToPay } = calculateInvoiceTotals(client.id);
             const isFechadoOuNao = client.situacao === 'F' || client.situacao === 'N';
-            // Atributos para tornar a leitura editável ou somente leitura com base na situação
             const leituraAttrs = isFechadoOuNao ? 'class="read-only-input"' : 'contenteditable="true"';
             const leituraTitle = isFechadoOuNao ? `Não editável (Situação: ${client.situacao})` : 'Insira a nova leitura aqui';
 
@@ -1219,9 +1216,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Renderiza a tabela de pagamentos
-    function renderPaymentsTable(filteredClients = state.clients) {
+    function renderPaymentsTable() {
         paymentsTableBody.innerHTML = '';
+        const searchTerm = clientSearchPayments.value.toLowerCase();
+
+        const filteredClients = state.clients.filter(client => {
+            const matchesName = client.name.toLowerCase().includes(searchTerm);
+            const matchesId = String(client.id).includes(searchTerm);
+            return matchesName || matchesId;
+        });
+
         filteredClients.forEach(client => {
             const { totalToPay } = calculateInvoiceTotals(client.id);
             const payment = state.payments[client.id] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
@@ -1229,14 +1233,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const remaining = totalToPay - totalPaid;
 
             const row = document.createElement('tr');
-            // Formata a data para exibição
             const formatDate = (dateString) => {
                 if (!dateString) return '';
                 return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
             };
 
             row.innerHTML = `
-                <td>${client.id}</td>
                 <td>${client.name}</td>
                 <td class="read-only-input">${totalToPay.toFixed(2)}</td>
                 <td class="payment-cell" data-client-id="${client.id}" data-field="p1">
@@ -1258,7 +1260,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Renderiza os recibos (visão geral na página, não para impressão individual)
+    function renderContractsTable() {
+        contractsTableBody.innerHTML = '';
+        Object.keys(state.contracts).forEach(contractId => {
+            const contract = state.contracts[contractId];
+            const client = state.clients.find(c => c.id == contract.clientId);
+            if (!client) return; // Should not happen if data is consistent
+
+            const { totalPaid, remaining } = calculateContractTotals(contractId);
+
+            const row = document.createElement('tr');
+            const formatDate = (dateString) => {
+                if (!dateString) return '';
+                return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            };
+
+            row.innerHTML = `
+                <td>${contract.id}</td>
+                <td>${client.id}</td>
+                <td>${client.name}</td>
+                <td>${contract.value.toFixed(2)}</td>
+                <td class="payment-cell" data-contract-id="${contractId}" data-field="p1">
+                    <div class="payment-cell-value" title="Clique para editar">${contract.payments.p1.amount || 0}</div>
+                    <span class="payment-date">${formatDate(contract.payments.p1.date)}</span>
+                </td>
+                <td class="payment-cell" data-contract-id="${contractId}" data-field="p2">
+                    <div class="payment-cell-value" title="Clique para editar">${contract.payments.p2.amount || 0}</div>
+                    <span class="payment-date">${formatDate(contract.payments.p2.date)}</span>
+                </td>
+                <td class="payment-cell" data-contract-id="${contractId}" data-field="p3">
+                    <div class="payment-cell-value" title="Clique para editar">${contract.payments.p3.amount || 0}</div>
+                    <span class="payment-date">${formatDate(contract.payments.p3.date)}</span>
+                </td>
+                <td class="${remaining > 0 ? 'text-danger' : 'text-success'} read-only-input">${remaining.toFixed(2)}</td>
+                <td class="actions-cell">
+                    <button class="btn-danger" data-action="delete-contract" data-id="${contractId}">Remover</button>
+                </td>
+            `;
+            contractsTableBody.appendChild(row);
+        });
+    }
+
     function renderReceipts() {
         receiptsContainer.innerHTML = '';
         const generatedInvoiceNumbers = new Set();
@@ -1267,12 +1309,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthName = now.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
         const year = now.getFullYear();
 
-        // Filtra apenas clientes com situação 'A' para geração de recibos nesta visão
         const clientsToPrint = state.clients.filter(client => client.situacao === 'A');
 
         clientsToPrint.forEach((client, index) => {
             let invoiceNumber;
-            // Gera um número de fatura único
             do {
                 invoiceNumber = Math.floor(Math.random() * 9000000000) + 1000000000;
             } while (generatedInvoiceNumbers.has(invoiceNumber));
@@ -1304,7 +1344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         Para efeitos e fins julgados convenientes, declaramos que a fatura do(a) Sr(a).<span class="data-field">${client.name}</span>
                         residente na casa nº <span class="data-field">___________</span>
                         tem de pagar a quantia de <span class="data-field">__________</span> MZN
-                        pelo consumo de água no valor de 75 MZN por m³.
+                        o valor do consumo mínimo é de 375MZN.
                     </p>
                     <table>
                         <thead>
@@ -1339,19 +1379,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     </table>
                 </div>
                 <div class="receipt-footer">
-                    <p>o valor do consumo mínimo é de 375MZN (trezentos e setenta e cinco meticais)</p>
                 </div>
             </div>`;
             receiptsContainer.innerHTML += receiptHTML;
 
-            // Adiciona uma linha divisória entre os recibos na visualização em tela
             if (index < clientsToPrint.length - 1) {
                 receiptsContainer.innerHTML += '<hr class="invoice-divider">';
             }
         });
     }
 
-    // Converte um número para palavras em português (simplificado)
+    // Function to convert number to words in Portuguese (simplified for common use)
     function numberToWords(num) {
         const units = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
         const teens = ['dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezasseis', 'dezassete', 'dezoito', 'dezanove'];
@@ -1397,11 +1435,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         let fullResult = result.trim();
-        // Adiciona "metical" ou "meticais"
-        if (integerPart === 1 && !result.includes("milhão") && !result.includes("mil milhões")) { // "um metical"
-            fullResult += ' metical';
+        
+        // Add "Metical" or "Meticais" based on the integer part
+        if (integerPart === 1 && !fullResult.includes("milhão") && !fullResult.includes("mil milhões")) {
+            fullResult += ' Metical';
         } else if (integerPart > 0) {
-            fullResult += ' meticais';
+            fullResult += ' Meticais';
         }
 
         if (decimalPart > 0) {
@@ -1413,12 +1452,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return fullResult.charAt(0).toUpperCase() + fullResult.slice(1);
     }
 
-    // Gera uma assinatura binária única de 25 dígitos
+    // Function to generate a unique 25-digit binary string
     function generateUniqueBinarySignature() {
         let binaryString;
         do {
             binaryString = '';
-            for (let i = 0; i < 25; i++) { // Alterado para 25 dígitos
+            for (let i = 0; i < 25; i++) { // Changed to 25 digits
                 binaryString += Math.round(Math.random());
             }
         } while (generatedBinarySignatures.has(binaryString));
@@ -1427,7 +1466,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Gera um recibo para um cliente específico e o abre em uma nova janela para impressão
     function generateReceipt(clientId) {
         const client = state.clients.find(c => c.id == clientId);
         if (!client) {
@@ -1440,7 +1478,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
         const valorEmFalta = totalToPay - totalPaid;
 
-        // Determina o último pagamento e seu valor/data
+        // Determine the last payment and its amount
         let lastPaymentAmount = 0;
         let lastPaymentDate = null;
         if (payment.p3.amount > 0 && payment.p3.date) {
@@ -1459,26 +1497,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthText = now.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
         const fullYear = String(now.getFullYear());
 
-        const amountInWords = numberToWords(lastPaymentAmount);
+        const amountInWords = numberToWords(lastPaymentAmount); // Now includes "Meticais" suffix
 
-        // Adiciona sublinhados se o conteúdo for menor que o comprimento máximo
+        // This function will add underscores only if the content is shorter than maxLength
         const fillWithUnderscores = (text, maxLength) => {
             const currentLength = String(text).length;
             if (currentLength >= maxLength) return String(text);
             return String(text) + '_'.repeat(maxLength - currentLength);
         };
 
-        // Adiciona uma classe para esconder a borda se o texto preencher o espaço
+        // This function adds a class to hide the border if the text fills the space
         const getUnderlineClass = (text, maxLength) => {
+            // For strings with underscores, we want the underline to show if it's shorter
+            // For data like signature that shouldn't have underline if not filled, use a specific check
             return String(text).length >= maxLength ? 'no-underline' : '';
         };
 
         const machineSignature = generateUniqueBinarySignature();
 
-        // Determina a classe de cor para 'valorEmFalta'
+        // Determine the color class for 'valorEmFalta'
         const valorEmFaltaClass = valorEmFalta > 1499 ? 'data-field-red' : 'data-field-blue';
 
-        // Função para gerar o HTML de um único recibo
+        // Function to generate a single receipt's HTML
         const createSingleReceiptHTML = () => {
             return `
             <div class="recibo-popup">
@@ -1487,25 +1527,28 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div class="recibo-num"> <span class="fill-underline ${getUnderlineClass(day, 2)} data-field-blue">${fillWithUnderscores(day, 2)}</span> DE <span class="fill-underline no-underline-month ${getUnderlineClass(monthText, 10)} data-field-blue">${fillWithUnderscores(monthText, 10)}</span> DE <span class="fill-underline ${getUnderlineClass(fullYear, 4)} data-field-blue">${fullYear}</span> <br /><br />PAGO <span class="fill-underline ${getUnderlineClass(lastPaymentAmount.toFixed(2), 10)} data-field-blue">${fillWithUnderscores(lastPaymentAmount.toFixed(2), 10)}</span> MT</div>
                 </div>
 
-                <div class="linha">Recebemos do Exmo. (s) Sr.(s) <span class="fill-underline ${getUnderlineClass(client.name, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(client.name, 60)}</span></div>
-                <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords + ' Meticais', 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords + ' Meticais', 60)}</span></div>
+                <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(client.name, 60)}</span></div>
+                <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
                 <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass('Pagamento de Consumo de Água', 50)} data-field-blue" style="width: 50%;">Pagamento de Consumo de Água</span> Remanescente <span class="fill-underline ${getUnderlineClass(valorEmFalta.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(valorEmFalta.toFixed(2), 10)}</span> MT</div>
 
                 <div class="linha">de que passamos o presente recibo.</div>
 
                 <div class="linha"></div>
 
+                <div class="receipt-top-info">
+                  <span class="payment-form-header">Forma de pagamento:</span>
+                  <span class="assinatura-header">Assinatura e carimbo:</span>
+                </div>
+
                 <div class="assinatura-checklist-container">
                   <div class="checklist">
-                    <h4>Forma de pagamento:</h4>
-                    <label><input type="checkbox" checked> Em numerário</label><br>
+                    <label><input type="checkbox"> Cheque nº <span class="fill-underline" style="width: 15ch;"></span></label><br>
                     <label><input type="checkbox"> Banco <span class="fill-underline" style="width: 18ch;"></span></label><br>
                     <label><input type="checkbox"> Outros</label><br>
-                    <label><input type="checkbox"> m-pesa</label>
+                    <label><input type="checkbox" checked> Em numerário</label>
                   </div>
 
                   <div class="assinatura">
-                    Assinatura e carimbo:<br> <br>
                     <span class="fill-underline" style="width: 25ch;"></span>
                     <img src="carimbo.png" alt="Carimbo" class="carimbo-overlay">
                     <br> <br> ASSINATURA MÁQUINA <br /> <br><span class="fill-underline no-underline data-field-blue">${machineSignature}</span>
@@ -1515,7 +1558,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         };
 
-        // Abre uma nova janela para impressão
         const newWindow = window.open('', '_blank', 'width=800,height=600');
         newWindow.document.open();
         newWindow.document.write(`
@@ -1538,17 +1580,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 overflow: hidden; /* Hide scrollbars */
               }
               .recibo-popup {
-                  width: 19cm !important; /* Adjusted for A4 width with margins */
+                  width: 21cm !important; /* Largura total da folha A4 */
                   height: 12.8cm !important; /* Altura calculada para dois recibos na A4 (29.7cm / 2 = 14.85cm. Ajustado para caber com pequenas margens) */
-                  margin: 0.8cm auto 0.4cm !important; /* Margem superior, laterais, e inferior reduzida antes da HR */
+                  margin: 0.8cm 0 0.4cm !important; /* Margem superior, sem margens laterais, e inferior reduzida */
                   border: 1px solid black !important;
                   box-sizing: border-box !important;
                   font-family: monospace !important;
                   position: relative !important;
                   page-break-after: auto !important; /* CRÍTICO: Não forçar quebras de página após CADA recibo na nova janela */
                   page-break-inside: avoid; /* Prevent breaking a receipt in half */
-                  border-radius: 6px !important; /* Ensure rounded corners on print */
-                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important; /* Ensure shadow on print */
               }
               
                /* Ajustar os tamanhos de fonte para o recibo ficar mais compacto na impressão */
@@ -1561,9 +1601,6 @@ document.addEventListener('DOMContentLoaded', () => {
               .recibo-popup .linha {
                   font-size: 10pt;
                   line-height: 1.2;
-              }
-              .recibo-popup .checklist h4, .recibo-popup .assinatura {
-                  font-size: 10pt;
               }
               .recibo-popup .checklist label {
                   font-size: 9pt;
@@ -1603,6 +1640,35 @@ document.addEventListener('DOMContentLoaded', () => {
             .receipt-footer p {
                 margin-bottom: 0 !important;
             }
+            /* Explicitly set for print to ensure row layout */
+            .recibo-popup .assinatura-checklist-container {
+                flex-direction: row !important; /* Force side-by-side for print */
+                justify-content: space-between !important;
+                align-items: flex-start !important;
+            }
+            .recibo-popup .checklist,
+            .recibo-popup .assinatura {
+                width: 48% !important; /* Ensure they share space */
+                margin-bottom: 0 !important;
+            }
+            .recibo-popup .assinatura {
+                text-align: right !important; /* Align signature text to the right for print */
+            }
+
+            /* Novo estilo para o topo da seção de pagamento/assinatura no recibo de impressão */
+            .recibo-popup .receipt-top-info {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: flex-end !important; /* Alinhar texto com a parte de baixo */
+                font-weight: bold !important;
+                font-size: 10pt !important; /* Ajuste o tamanho da fonte para impressão */
+                margin-bottom: 5px !important; /* Espaço entre o cabeçalho e os checkboxes */
+            }
+
+            .recibo-popup .receipt-top-info .assinatura-header-print {
+                margin-top: 0 !important; /* Remover margem extra no topo */
+                margin-bottom: 0 !important; /* Remover margem extra no rodapé */
+            }
         }
 
             /* Estilos de tela para a janela de recibo */
@@ -1614,8 +1680,6 @@ document.addEventListener('DOMContentLoaded', () => {
               box-sizing: border-box;
               font-family: monospace;
               position: relative;
-              border-radius: 6px; /* Apply rounded corners */
-              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Apply visible shadow */
             }
 
             .recibo-popup .cabecalho {
@@ -1645,6 +1709,12 @@ document.addEventListener('DOMContentLoaded', () => {
               text-align: right;
               position: relative;
             }
+            /* Estilo para o texto "Assinatura e carimbo" */
+            .recibo-popup .assinatura .assinatura-header {
+                font-weight: bold; /* Deixar o texto em negrito */
+                font-size: 1rem; /* Pode ajustar o tamanho da fonte */
+            }
+
 
             .recibo-popup .assinatura-maquina {
               margin-top: 30px;
@@ -1655,9 +1725,16 @@ document.addEventListener('DOMContentLoaded', () => {
               margin-top: 10px;
               text-align: left;
             }
+            /* Estilo para o texto "Forma de pagamento" */
+            .recibo-popup .checklist .payment-form-header {
+                font-weight: bold; /* Deixar o texto em negrito */
+                font-size: 1rem; /* Pode ajustar o tamanho da fonte */
+            }
+
 
             .recibo-popup .assinatura-checklist-container {
               display: flex;
+              flex-direction: column; /* Stack on small screens for the pop-up too */
               justify-content: space-between;
               align-items: flex-start;
               margin-top: 30px;
@@ -1665,8 +1742,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             .recibo-popup .checklist,
             .recibo-popup .assinatura {
-              width: 48%;
+              width: 100%; /* Full width on small screens for pop-up */
+              margin-bottom: 20px;
             }
+            .recibo-popup .assinatura {
+                text-align: left; /* Align left when stacked */
+            }
+
+            /* Novo estilo para o topo da seção de pagamento/assinatura no recibo */
+            .recibo-popup .receipt-top-info {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end; /* Alinhar o texto com a parte de baixo */
+                margin-bottom: 10px; /* Espaço entre o cabeçalho e os checkboxes */
+                font-weight: bold; /* Deixar o texto em negrito */
+            }
+            .recibo-popup .receipt-top-info .assinatura-header {
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+
+
             .fill-underline {
                 font-family: monospace;
                 white-space: pre;
@@ -1704,6 +1800,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 z-index: 10;
                 margin-left: 64.26px;
             }
+            /* Adjustments for the carimbo in the popup, especially if .recibo-popup .assinatura is text-align: left */
+            @media (max-width: 768px) {
+                .carimbo-overlay {
+                    top: auto !important; /* Reset top */
+                    bottom: -20px; /* Position relative to signature area */
+                    left: 10px !important; /* Align left with text */
+                    transform: translateX(0) !important;
+                    width: 100px !important; /* Smaller stamp */
+                    margin-left: 0 !important;
+                }
+            }
           </style>
         </head>
         <body>
@@ -1713,208 +1820,13 @@ document.addEventListener('DOMContentLoaded', () => {
         `);
         newWindow.document.close();
         newWindow.focus();
-        newWindow.print(); // Habilita a impressão automática
+        newWindow.print(); // Auto-print
     }
 
-    // --- Contratos ---
-    // Preenche o select de clientes na seção de contratos
-    function renderContractClientSelect() {
-        contractClientSelect.innerHTML = '<option value="">-- Selecione um Cliente --</option>';
-        state.clients.forEach(client => {
-            const option = document.createElement('option');
-            option.value = client.id;
-            option.textContent = `${client.id} - ${client.name}`;
-            contractClientSelect.appendChild(option);
-        });
-    }
-
-    // Renderiza a tabela de contratos
-    function renderContractsTable() {
-        contractTableBody.innerHTML = '';
-        state.contracts.forEach(contract => {
-            const client = state.clients.find(c => c.id === contract.clientId);
-            if (!client) return; // Pula se o cliente não for encontrado
-
-            const totalPaid = contract.payments.reduce((sum, p) => sum + p.amount, 0);
-            const remaining = contract.contractValue - totalPaid;
-
-            const row = document.createElement('tr');
-            row.dataset.clientId = client.id;
-            row.innerHTML = `
-                <td>${client.id}</td>
-                <td>${client.name}</td>
-                <td class="contract-total">${contract.contractValue.toFixed(2)}</td>
-                <td class="payments-cell" data-contract-id="${contract.id}"></td>
-                <td class="${remaining > 0 ? 'text-danger' : 'text-success'}">${remaining.toFixed(2)}</td>
-                <td><button class="btn-danger btn-sm" data-action="delete-contract" data-contract-id="${contract.id}">Remover</button></td>
-            `;
-
-            const paymentsCell = row.querySelector('.payments-cell');
-            contract.payments.forEach(payment => {
-                addPaymentFieldToContract(paymentsCell, payment.amount, payment.date, contract.id, payment.id);
-            });
-            // Adiciona um campo vazio se o último tiver valor ou se não houver pagamentos
-            if (contract.payments.length === 0 || contract.payments[contract.payments.length - 1].amount > 0) {
-                 addPaymentFieldToContract(paymentsCell, 0, null, contract.id, null, true);
-            }
-
-            contractTableBody.appendChild(row);
-        });
-    }
-
-    // Adiciona um campo de pagamento à célula de pagamentos do contrato
-    function addPaymentFieldToContract(paymentsCell, amount, date, contractId, paymentId, isNew = false) {
-        const paymentEntry = document.createElement('div');
-        paymentEntry.className = 'payment-entry';
-
-        const paymentInput = document.createElement('input');
-        paymentInput.type = 'number';
-        paymentInput.value = amount.toFixed(2);
-        paymentInput.min = '0';
-        paymentInput.step = '0.01';
-        paymentInput.placeholder = 'Valor';
-        paymentInput.dataset.contractId = contractId;
-        paymentInput.dataset.paymentId = paymentId || ''; // Armazena o ID do pagamento se existir
-        paymentInput.dataset.previousValue = amount.toFixed(2); // Armazena o valor anterior
-
-        const paymentDateSpan = document.createElement('span');
-        paymentDateSpan.className = 'payment-date';
-        paymentDateSpan.textContent = date ? `(${new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })})` : '(Novo)';
-
-        paymentEntry.appendChild(paymentInput);
-        paymentEntry.appendChild(paymentDateSpan);
-        paymentsCell.appendChild(paymentEntry);
-
-        paymentInput.addEventListener('blur', handleContractPaymentChange);
-        paymentInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                paymentInput.blur(); // Dispara o evento blur para salvar o valor
-            }
-        });
-
-        if (isNew) {
-            paymentInput.focus();
-        }
-    }
-
-    // Lida com a mudança de valor em um campo de pagamento de contrato
-    function handleContractPaymentChange(e) {
-        const inputElement = e.target;
-        const contractId = parseInt(inputElement.dataset.contractId);
-        let paymentId = inputElement.dataset.paymentId; // Será vazio para novos campos
-        let newAmount = parseFloat(inputElement.value);
-        const previousAmount = parseFloat(inputElement.dataset.previousValue);
-
-        if (isNaN(newAmount) || newAmount < 0) {
-            newAmount = 0;
-        }
-
-        const contract = state.contracts.find(c => c.id === contractId);
-        if (!contract) return;
-
-        requestVerificationCode(() => {
-            const currentTotalPaid = contract.payments.reduce((sum, p) => sum + p.amount, 0) - previousAmount;
-            let potentialNewTotalPaid = currentTotalPaid + newAmount;
-
-            // Limita o newAmount se o totalPago exceder o valor do contrato
-            if (potentialNewTotalPaid > contract.contractValue) {
-                const excess = potentialNewTotalPaid - contract.contractValue;
-                newAmount = Math.max(0, newAmount - excess); // Reduz o newAmount para caber
-                inputElement.value = newAmount.toFixed(2); // Atualiza o campo de input
-            }
-
-            if (paymentId) {
-                // Atualiza um pagamento existente
-                const paymentToUpdate = contract.payments.find(p => p.id == paymentId);
-                if (paymentToUpdate) {
-                    paymentToUpdate.amount = newAmount;
-                    paymentToUpdate.date = new Date().toISOString();
-                }
-            } else {
-                // Adiciona um novo pagamento se o valor for maior que 0
-                if (newAmount > 0) {
-                    paymentId = Date.now(); // ID simples e único
-                    contract.payments.push({
-                        id: paymentId,
-                        amount: newAmount,
-                        date: new Date().toISOString()
-                    });
-                    inputElement.dataset.paymentId = paymentId; // Define o novo ID do pagamento
-                } else {
-                    inputElement.value = '0.00'; // Garante que seja exibido como 0 se nada foi inserido
-                }
-            }
-
-            inputElement.dataset.previousValue = newAmount.toFixed(2); // Atualiza o valor anterior
-
-            saveData();
-            renderContractsTable(); // Renderiza novamente a tabela para refletir as mudanças e adicionar novo input se necessário
-        });
-    }
-
-    // Listener para adicionar um novo contrato
-    addContractButton.addEventListener('click', () => {
-        const clientId = contractClientSelect.value;
-        const contractValue = parseFloat(contractValueInput.value);
-
-        if (!clientId) {
-            alert('Por favor, selecione um cliente.');
-            return;
-        }
-        if (isNaN(contractValue) || contractValue <= 0) {
-            alert('Por favor, insira um valor de contrato válido e positivo.');
-            return;
-        }
-
-        const clientExists = state.clients.some(c => c.id == clientId);
-        if (!clientExists) {
-            alert('Cliente selecionado não encontrado nos dados.');
-            return;
-        }
-        
-        // Impede a adição de contratos duplicados para o mesmo cliente
-        const existingContract = state.contracts.find(c => c.clientId == clientId);
-        if (existingContract) {
-            alert('Já existe um contrato para este cliente. Por favor, edite o contrato existente.');
-            return;
-        }
-
-        requestVerificationCode(() => {
-            const newContract = {
-                id: Date.now(), // ID único para o contrato
-                clientId: parseInt(clientId),
-                contractValue: contractValue,
-                payments: []
-            };
-            state.contracts.push(newContract);
-            saveData();
-            renderContractsTable();
-            contractClientSelect.value = ''; // Reseta o select
-            contractValueInput.value = '5000'; // Reseta o valor
-        });
-    });
-
-    // Listener para remover um contrato
-    contractTableBody.addEventListener('click', (e) => {
-        const target = e.target;
-        if (target.dataset.action === 'delete-contract') {
-            const contractIdToDelete = parseInt(target.dataset.contractId);
-            if (confirm(`Tem a certeza que deseja remover este contrato? Esta ação não pode ser desfeita.`)) {
-                requestVerificationCode(() => {
-                    state.contracts = state.contracts.filter(c => c.id !== contractIdToDelete);
-                    saveData();
-                    renderContractsTable();
-                });
-            }
-        }
-    });
 
     // --- LÓGICA DE EVENTOS ---
-    // Abre/fecha o menu lateral
     menuButton.addEventListener('click', () => sideMenu.classList.toggle('open'));
 
-    // Lida com o formulário de autenticação
     authForm.addEventListener('submit', (e) => {
         e.preventDefault();
         if (verificationCodeInput.value === FIXED_VERIFICATION_CODE) {
@@ -1926,39 +1838,37 @@ document.addEventListener('DOMContentLoaded', () => {
         verificationCodeInput.value = '';
     });
 
-    // Lida com os botões de ação do menu administrativo
     adminActions.addEventListener('click', (e) => {
         if (e.target.tagName !== 'BUTTON') return;
         const action = e.target.dataset.action;
         const view = e.target.dataset.view;
+
         if (action === 'add-client') {
-            modalTitle.textContent = 'Adicionar Cliente';
+            clientModalTitle.textContent = 'Adicionar Cliente';
             clientForm.reset();
             clientIdInput.value = '';
             clientModal.classList.remove('hidden');
+        } else if (action === 'add-contract') {
+            openContractModal();
         }
+        
         if (view) {
             views.forEach(v => v.classList.add('hidden'));
             document.getElementById(view).classList.remove('hidden');
             sideMenu.classList.remove('open');
-            if (view === 'clients-view') renderClientsTable(); // Renderiza todos os clientes inicialmente para esta vista
+            if (view === 'clients-view') renderClientsTable();
             if (view === 'invoices-view') renderInvoicesTable();
-            if (view === 'payments-view') renderPaymentsTable(); // Renderiza todos os pagamentos quando a vista é ativada
+            if (view === 'payments-view') renderPaymentsTable();
+            if (view === 'contracts-view') renderContractsTable();
             if (view === 'receipts-view') renderReceipts();
-            if (view === 'contracts-view') {
-                renderContractClientSelect(); // Preenche o select de clientes para contratos
-                renderContractsTable(); // Renderiza a tabela de contratos
-            }
         }
     });
 
-    // Fecha o modal de cliente
-    closeModalButton.addEventListener('click', () => clientModal.classList.add('hidden'));
+    closeClientModalButton.addEventListener('click', () => clientModal.classList.add('hidden'));
     clientModal.addEventListener('click', (e) => {
         if (e.target === clientModal) clientModal.classList.add('hidden');
     });
 
-    // Lida com o envio do formulário de cliente (adicionar/editar)
     clientForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const id = clientIdInput.value;
@@ -1969,13 +1879,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         requestVerificationCode(() => {
             if (id) {
-                // Edita cliente existente
                 const index = state.clients.findIndex(c => c.id == id);
                 if (index > -1) {
                     state.clients[index] = { ...state.clients[index], ...clientData };
                 }
             } else {
-                // Adiciona novo cliente
                 const newId = state.clients.length > 0 ? Math.max(...state.clients.map(c => c.id)) + 1 : 1;
                 state.clients.push({ id: newId, ...clientData, situacao: 'A' });
                 state.invoices[newId] = { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
@@ -1987,10 +1895,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Lida com cliques na tabela de clientes (editar/remover)
     clientsTableBody.addEventListener('click', (e) => {
         const target = e.target;
-        // Lida com o toggle de botões de ação
         if (target.classList.contains('action-toggle')) {
             target.nextElementSibling.classList.toggle('visible');
             return;
@@ -2001,7 +1907,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (action === 'edit') {
             const client = state.clients.find(c => c.id == id);
             if (client) {
-                modalTitle.textContent = 'Editar Cliente';
+                clientModalTitle.textContent = 'Editar Cliente';
                 clientIdInput.value = client.id;
                 clientNameInput.value = client.name;
                 clientContactInput.value = client.contact;
@@ -2014,7 +1920,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     state.clients = state.clients.filter(c => c.id != id);
                     delete state.invoices[id];
                     delete state.payments[id];
-                    state.contracts = state.contracts.filter(c => c.clientId != id); // Remove contratos associados
+                    // Also delete related contracts
+                    for (const contractId in state.contracts) {
+                        if (state.contracts[contractId].clientId == id) {
+                            delete state.contracts[contractId];
+                        }
+                    }
                     saveData();
                     renderAllTables();
                 });
@@ -2022,7 +1933,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Lida com o clique no botão "Gerar" recibo na tabela de pagamentos
     paymentsTableBody.addEventListener('click', (e) => {
         const target = e.target;
         if (target.dataset.action === 'generate-receipt') {
@@ -2031,7 +1941,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Lida com a mudança de situação do cliente no select
+
     function handleSituacaoChange(e) {
         const select = e.target;
         if (!select.classList.contains('situacao-select')) return;
@@ -2046,24 +1956,32 @@ document.addEventListener('DOMContentLoaded', () => {
         requestVerificationCode(() => {
             client.situacao = newSituacao;
             if (newSituacao === 'N') {
-                // Se a situação mudar para 'N' (Não), recalcula a dívida para incluir a leitura anterior + 375
                 const { totalToPay } = calculateInvoiceTotals(clientId);
                 const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
                 const valorEmFalta = totalToPay - totalPaid;
-                invoice.prevReading = invoice.currentReading; // Move a leitura atual para anterior
-                invoice.customAmount = valorEmFalta + 375; // Adiciona o mínimo de 375 à dívida remanescente
+                invoice.prevReading = invoice.currentReading;
+                invoice.currentReading = 0; // Reset current reading
+                invoice.customAmount = valorEmFalta + 375; // Add minimum payment for remaining debt
+                invoice.debt = 0; // Debt is now part of customAmount
             } else if (originalSituacao === 'N' && newSituacao !== 'N') {
-                // Se sair de 'N', remove o customAmount
                 invoice.customAmount = null;
+            } else if (newSituacao === 'F') { // If changing to 'F' (Fechada)
+                const { totalToPay } = calculateInvoiceTotals(clientId); // Re-calculate based on current invoice state
+                const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
+                const valorEmFalta = totalToPay - totalPaid;
+                 invoice.prevReading = invoice.currentReading;
+                invoice.currentReading = 0; // Reset current reading for closed account
+                invoice.customAmount = valorEmFalta; // Final amount to pay for closure, no additional 375
+            } else if (originalSituacao === 'F' && newSituacao !== 'F') {
+                invoice.customAmount = null; // Remove custom amount if changing from Fechada
             }
             saveData();
             renderAllTables();
         }, () => {
-            select.value = originalSituacao; // Reverte a seleção se a verificação falhar
+            select.value = originalSituacao;
         });
     }
 
-    // Lida com a edição de células nas tabelas
     function handleCellEdit(e) {
         const cell = e.target.closest('td[contenteditable="true"]');
         if (!cell) return;
@@ -2076,44 +1994,58 @@ document.addEventListener('DOMContentLoaded', () => {
                  requestVerificationCode(() => {
                     updateStateFromCell(cell, newCellValue);
                  }, () => {
-                    renderAllTables(); // Re-renderiza para restaurar o valor original se a verificação falhar
+                    cell.textContent = originalCellValue; // Revert on failure
                  });
             }
         } else if (e.type === 'keydown' && e.key === 'Enter') {
             e.preventDefault();
-            cell.blur(); // Tira o foco da célula para salvar
+            cell.blur();
         }
     }
 
-    // Atualiza o estado da aplicação com base na edição da célula
     function updateStateFromCell(cell, value) {
         const clientId = cell.dataset.clientId;
         const field = cell.dataset.field;
         const client = state.clients.find(c => c.id == clientId);
         if (!client || !field) {
-            renderAllTables();
+            renderAllTables(); // Re-render to revert invalid changes
             return;
         }
-        // Impede a edição de leitura para clientes com situação 'F' ou 'N'
-        if ((client.situacao === 'F' || client.situacao === 'N') && (field === 'prevReading' || field === 'currentReading')) {
-            alert(`Não é possível alterar as leituras de um cliente com a situação "${client.situacao}".`);
-            renderAllTables();
-            return;
-        }
+
         const parsedValue = parseFloat(value.replace(',', '.'));
         if (isNaN(parsedValue)) {
             alert("Por favor, insira um valor numérico válido.");
-            renderAllTables();
+            renderAllTables(); // Revert
             return;
         }
+        
+        // Prevent editing readings for 'F' or 'N' clients
+        if ((client.situacao === 'F' || client.situacao === 'N') && (field === 'prevReading' || field === 'currentReading')) {
+            alert(`Não é possível alterar as leituras de um cliente com a situação "${client.situacao}".`);
+            renderAllTables(); // Revert
+            return;
+        }
+
+        // START: Validation for currentReading not less than prevReading
+        if (field === 'currentReading') {
+            const currentInvoice = state.invoices[clientId];
+            const prevReading = currentInvoice ? (currentInvoice.prevReading || 0) : 0;
+            if (parsedValue < prevReading) {
+                alert("A leitura atual não pode ser menor que a leitura anterior.");
+                renderInvoicesTable(); // Revert to previous value
+                return; 
+            }
+        }
+        // END: Validation for currentReading not less than prevReading
+
         if (['prevReading', 'currentReading', 'debt', 'customAmount'].includes(field)) {
              if (field === 'customAmount') {
                  const { totalToPay } = calculateInvoiceTotals(clientId);
-                 // Se o valor personalizado for muito próximo do total calculado, define como null
+                 // Only update customAmount if it's significantly different from auto-calculated totalToPay
                  state.invoices[clientId].customAmount = (Math.abs(parsedValue - totalToPay) > 0.01) ? parsedValue : null;
              } else {
                 state.invoices[clientId][field] = parsedValue;
-                 // Reseta customAmount se as leituras ou dívida forem alteradas
+                 // If reading or debt is changed, customAmount should be reset
                  if(field === 'currentReading' || field === 'debt') {
                     state.invoices[clientId].customAmount = null;
                  }
@@ -2124,42 +2056,89 @@ document.addEventListener('DOMContentLoaded', () => {
         saveData();
     }
 
-    // Lida com o clique em uma célula de pagamento para editar
     function handlePaymentClick(e) {
         const cell = e.target.closest('.payment-cell');
         if (!cell) return;
         const clientId = cell.dataset.clientId;
         const field = cell.dataset.field;
-        const currentAmount = state.payments[clientId][field].amount || 0;
+        const payment = state.payments[clientId] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
+        const currentAmount = payment[field].amount || 0;
 
         requestVerificationCode(() => {
             const newAmountStr = prompt(`Insira o novo valor para o ${field.replace('p', '')}º pagamento:`, currentAmount);
-            if (newAmountStr === null) return; // Se o usuário cancelar
+            if (newAmountStr === null) return;
             const newAmount = parseFloat(newAmountStr.replace(',', '.'));
             if (isNaN(newAmount)) {
                 alert("Valor inválido. Por favor, insira um número.");
                 return;
             }
-            state.payments[clientId][field].amount = newAmount;
-            state.payments[clientId][field].date = (newAmount > 0) ? new Date().toISOString() : null; // Define a data apenas se o valor for maior que zero
+
+            const { totalToPay } = calculateInvoiceTotals(clientId);
+            const paymentsExceptCurrent = Object.keys(payment)
+                .filter(key => key !== field)
+                .reduce((sum, key) => sum + (payment[key].amount || 0), 0);
+
+            if (paymentsExceptCurrent + newAmount > totalToPay) {
+                alert("O total dos pagamentos não pode exceder o valor total a pagar.");
+                return;
+            }
+
+            payment[field].amount = newAmount;
+            payment[field].date = (newAmount > 0) ? new Date().toISOString() : null;
             saveData();
             renderPaymentsTable();
-            renderInvoicesTable(); 
+            renderInvoicesTable(); // Re-render invoices to update "Valor a Pagar" if debt was paid
         });
     }
 
-    // Lida com o clique no botão "Novo Mês"
+    function handleContractPaymentClick(e) {
+        const cell = e.target.closest('.payment-cell');
+        if (!cell) return;
+        const contractId = cell.dataset.contractId;
+        const field = cell.dataset.field; // p1, p2, p3
+        const contract = state.contracts[contractId];
+        if (!contract) return;
+
+        const currentAmount = contract.payments[field].amount || 0;
+
+        requestVerificationCode(() => {
+            const newAmountStr = prompt(`Insira o novo valor para o ${field.replace('p', '')}º pagamento do contrato:`, currentAmount);
+            if (newAmountStr === null) return;
+            const newAmount = parseFloat(newAmountStr.replace(',', '.'));
+            if (isNaN(newAmount)) {
+                alert("Valor inválido. Por favor, insira um número.");
+                return;
+            }
+
+            const paymentsExceptCurrent = Object.keys(contract.payments)
+                .filter(key => key !== field)
+                .reduce((sum, key) => sum + (contract.payments[key].amount || 0), 0);
+            
+            // Check if new total payment exceeds contract value
+            if (paymentsExceptCurrent + newAmount > contract.value) {
+                alert(`O valor total dos pagamentos (${(paymentsExceptCurrent + newAmount).toFixed(2)} MZN) não pode exceder o valor do contrato (${contract.value.toFixed(2)} MZN).`);
+                return;
+            }
+
+            contract.payments[field].amount = newAmount;
+            contract.payments[field].date = (newAmount > 0) ? new Date().toISOString() : null;
+            saveData();
+            renderContractsTable();
+        });
+    }
+
     newMonthButton.addEventListener('click', () => {
-        // Verifica se há clientes com situação 'A' e sem leitura atual
+        // Validate if all clients with situation 'A' have current readings
         const clientsWithoutCurrentReading = state.clients.filter(client =>
-            client.situacao === 'A' &&
-            (!state.invoices[client.id] || !state.invoices[client.id].currentReading || state.invoices[client.id].currentReading === 0)
+            client.situacao === 'A' && (!state.invoices[client.id] || !state.invoices[client.id].currentReading)
         );
 
         if (clientsWithoutCurrentReading.length > 0) {
-            alert("Tem um cliente com a situação A que não tem valor da leitura atual.");
-            return; // Interrompe a função se a condição for atendida
+            const clientNames = clientsWithoutCurrentReading.map(c => c.name).join(', ');
+            alert(`Não é possível iniciar um novo mês. Os seguintes clientes com situação 'A' não têm leitura atual: ${clientNames}.`);
+            return;
         }
+
 
         if (confirm("Tem a certeza que deseja iniciar um novo mês? Esta ação irá arquivar os valores atuais e não pode ser desfeita.")) {
             requestVerificationCode(() => {
@@ -2168,21 +2147,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
                     const payment = state.payments[clientId] || { p1: { amount: 0 }, p2: { amount: 0 }, p3: { amount: 0 } };
                     const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
+                    
                     let remainingAmount;
-                    if (client.situacao === 'F') {
-                        // Para clientes fechados, a dívida remanescente é baseada no customAmount ou dívida anterior
-                        const totalToPayForClosedAccount = (invoice.customAmount != null) ? parseFloat(invoice.customAmount) : (parseFloat(invoice.debt) || 0);
-                        remainingAmount = totalToPayForClosedAccount - totalPaid;
-                    } else {
-                        // Para clientes abertos ou não aplicáveis, calcula o total a pagar normalmente
-                        const { totalToPay } = calculateInvoiceTotals(clientId);
-                        remainingAmount = totalToPay - totalPaid;
-                    }
-                    state.invoices[clientId].debt = remainingAmount > 0 ? remainingAmount : 0; // A dívida remanescente torna-se a nova dívida
-                    state.invoices[clientId].prevReading = invoice.currentReading || 0; // Leitura atual torna-se a anterior
-                    state.invoices[clientId].currentReading = 0; // Zera a leitura atual
-                    state.invoices[clientId].customAmount = null; // Reseta o valor personalizado
-                    state.payments[clientId] = { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } }; // Reseta pagamentos
+                    const { totalToPay } = calculateInvoiceTotals(clientId); // Re-calculate based on current invoice state
+                    remainingAmount = totalToPay - totalPaid;
+                    
+                    // Update invoice for new month
+                    state.invoices[clientId].debt = remainingAmount > 0 ? remainingAmount : 0;
+                    state.invoices[clientId].prevReading = invoice.currentReading || 0;
+                    state.invoices[clientId].currentReading = 0;
+                    state.invoices[clientId].customAmount = null; // Reset custom amount for new month
+
+                    // Reset payments for new month
+                    state.payments[clientId] = { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
                 });
                 saveData();
                 renderAllTables();
@@ -2191,81 +2168,118 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Lida com o clique no botão "Imprimir" na seção de recibos (apenas informa o usuário)
     printReceiptsButton.addEventListener('click', () => {
+        // This button is intentionally made redundant as generateReceipt directly prints.
         alert('Por favor, use o botão "Gerar" na tabela de pagamentos para imprimir os recibos no formato A4.');
     });
 
-    // Adiciona listeners para eventos de mudança e edição
+    // --- Contratos Logic ---
+    function openContractModal(contract = null) {
+        contractForm.reset();
+        contractIdInput.value = ''; // This will hold clientId for new contract
+        contractModalTitle.textContent = 'Adicionar Contrato';
+        contractValueInput.value = 5000; // Default value
+
+        // Populate client select
+        contractClientSelect.innerHTML = '<option value="">Selecione um cliente</option>';
+        state.clients.forEach(client => {
+            // Check if client already has a contract
+            const hasContract = Object.values(state.contracts).some(c => c.clientId === client.id);
+            const option = document.createElement('option');
+            option.value = client.id;
+            option.textContent = `${client.name} (ID: ${client.id})`;
+            if (hasContract) {
+                option.disabled = true; // Disable if client already has a contract
+                option.textContent += ' (Já tem contrato)';
+            }
+            contractClientSelect.appendChild(option);
+        });
+
+        if (contract) {
+            // Edit mode (not currently used based on prompt, but good to have)
+            // contractModalTitle.textContent = 'Editar Contrato';
+            // contractIdInput.value = contract.id; // This would be the contract ID
+            // contractClientSelect.value = contract.clientId;
+            // contractClientSelect.disabled = true; // Cannot change client for existing contract
+            // contractValueInput.value = contract.value;
+        }
+        contractModal.classList.remove('hidden');
+    }
+
+    closeContractModalButton.addEventListener('click', () => contractModal.classList.add('hidden'));
+    contractModal.addEventListener('click', (e) => {
+        if (e.target === contractModal) contractModal.classList.add('hidden');
+    });
+
+    contractForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const clientId = parseInt(contractClientSelect.value);
+        const contractValue = parseFloat(contractValueInput.value);
+
+        if (isNaN(clientId) || !clientId) {
+            alert("Por favor, selecione um cliente.");
+            return;
+        }
+        if (isNaN(contractValue) || contractValue <= 0) {
+            alert("Por favor, insira um valor de contrato válido.");
+            return;
+        }
+
+        // Check for duplicate contract for the same client
+        const existingContract = Object.values(state.contracts).find(c => c.clientId === clientId);
+        if (existingContract) {
+            alert("Este cliente já possui um contrato.");
+            return;
+        }
+
+        requestVerificationCode(() => {
+            const newContractId = state.clients.length > 0 ? Math.max(...state.clients.map(c => c.id)) + 1000 : 1000; // Unique ID for contracts
+            state.contracts[newContractId] = {
+                id: newContractId,
+                clientId: clientId,
+                value: contractValue,
+                payments: {
+                    p1: { amount: 0, date: null },
+                    p2: { amount: 0, date: null },
+                    p3: { amount: 0, date: null }
+                }
+            };
+            saveData();
+            renderContractsTable();
+            contractModal.classList.add('hidden');
+        });
+    });
+
+    contractsTableBody.addEventListener('click', (e) => {
+        const target = e.target;
+        const action = target.dataset.action;
+        const contractId = target.dataset.id;
+        if (action === 'delete-contract') {
+            if (confirm(`Tem a certeza que deseja remover o contrato #${contractId}? Esta ação não pode ser desfeita.`)) {
+                requestVerificationCode(() => {
+                    delete state.contracts[contractId];
+                    saveData();
+                    renderContractsTable();
+                });
+            }
+        }
+    });
+
+
+    // --- Event Listeners ---
     clientsTableBody.addEventListener('change', handleSituacaoChange);
-    invoicesTableBody.addEventListener('focus', handleCellEdit, true); // Use 'true' para fase de captura
+    invoicesTableBody.addEventListener('focus', handleCellEdit, true);
     invoicesTableBody.addEventListener('blur', handleCellEdit, true);
     invoicesTableBody.addEventListener('keydown', handleCellEdit);
     paymentsTableBody.addEventListener('click', handlePaymentClick);
+    contractsTableBody.addEventListener('click', handleContractPaymentClick); // For contract payments
 
-    // --- Lógica de Pesquisa de Clientes na Gestão de Pagamentos ---
-    // Filtra e renderiza a tabela de pagamentos com base no termo de pesquisa
-    function searchClientsPayments() {
-        const searchTerm = searchClientInputPayments.value.toLowerCase().trim();
-        let filteredClients = [];
-
-        if (searchTerm === '') {
-            filteredClients = state.clients;
-        } else {
-            filteredClients = state.clients.filter(client => {
-                const clientName = client.name.toLowerCase();
-                const clientId = String(client.id);
-                return clientName.includes(searchTerm) || clientId.includes(searchTerm);
-            });
-        }
-        renderPaymentsTable(filteredClients);
-    }
-
-    // Event listeners para a pesquisa de clientes na gestão de pagamentos
-    searchClientButtonPayments.addEventListener('click', searchClientsPayments);
-    searchClientInputPayments.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            searchClientsPayments();
-        }
-    });
-    clearSearchButtonPayments.addEventListener('click', () => {
-        searchClientInputPayments.value = '';
-        renderPaymentsTable(); // Renderiza todos os clientes novamente
-    });
-
-    // --- Lógica de Pesquisa de Clientes na página Clientes ---
-    // Filtra e renderiza a tabela de clientes com base no termo de pesquisa
-    function searchClientsViewClients() {
-        const searchTerm = searchClientInputClients.value.toLowerCase().trim();
-        let filteredClients = [];
-
-        if (searchTerm === '') {
-            filteredClients = state.clients;
-        } else {
-            filteredClients = state.clients.filter(client => {
-                const clientName = client.name.toLowerCase();
-                const clientId = String(client.id);
-                return clientName.includes(searchTerm) || clientId.includes(searchTerm);
-            });
-        }
-        renderClientsTable(filteredClients); // Renderiza a tabela de clientes com os clientes filtrados
-    }
-
-    // Event listeners para a pesquisa de clientes na página de clientes
-    searchClientButtonClients.addEventListener('click', searchClientsViewClients);
-    searchClientInputClients.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            searchClientsViewClients();
-        }
-    });
-    clearSearchButtonClients.addEventListener('click', () => {
-        searchClientInputClients.value = '';
-        renderClientsTable(); // Renderiza todos os clientes novamente
-    });
+    // Search input listeners
+    clientSearchClients.addEventListener('input', renderClientsTable);
+    clientSearchPayments.addEventListener('input', renderPaymentsTable);
 
 
     // --- INICIALIZAÇÃO ---
-    // Carrega os dados, renderiza todas as tabelas e define a vista inicial como "Clientes"
     loadData();
     renderAllTables();
     document.getElementById('clients-view').classList.remove('hidden');
