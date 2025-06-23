@@ -691,11 +691,11 @@
             }
 
             /* Search input on top of tables */
-            #clients-view div, #payments-view div {
+            #clients-view div, #payments-view div, #invoices-view div {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            #client-search-clients, #client-search-payments {
+            #client-search-clients, #client-search-payments, #invoice-search {
                 width: 100% !important; /* Override inline style */
                 margin-top: 10px;
             }
@@ -864,12 +864,14 @@
             <section id="invoices-view" class="hidden">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2>Gestão de Faturas</h2>
+                    <input type="text" id="invoice-search" placeholder="Pesquisar por nome ou ID..." style="width: 50%;">
                     <button id="new-month-button" class="btn-warning">🚀 Novo Mês</button>
                 </div>
                 <div class="table-responsive">
                     <table id="invoices-table">
                         <thead>
                             <tr>
+                                <th>Nº</th>
                                 <th>Nome Cliente</th>
                                 <th>Leitura Anterior (m³)</th>
                                 <th>Leitura Atual (m³)</th>
@@ -1007,6 +1009,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clientSearchClients = document.getElementById('client-search-clients');
 
     const invoicesTableBody = document.getElementById('invoices-table-body');
+    const invoiceSearch = document.getElementById('invoice-search'); // Added for invoice search
     const paymentsTableBody = document.getElementById('payments-table-body');
     const clientSearchPayments = document.getElementById('client-search-payments');
 
@@ -1196,23 +1199,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderInvoicesTable() {
         invoicesTableBody.innerHTML = '';
-        state.clients.forEach(client => {
+        const searchTerm = invoiceSearch.value.toLowerCase(); // Get the search term
+
+        state.clients.forEach((client, index) => {
             const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
             const { consumption, totalToPay } = calculateInvoiceTotals(client.id);
             const isFechadoOuNao = client.situacao === 'F' || client.situacao === 'N';
             const leituraAttrs = isFechadoOuNao ? 'class="read-only-input"' : 'contenteditable="true"';
             const leituraTitle = isFechadoOuNao ? `Não editável (Situação: ${client.situacao})` : 'Insira a nova leitura aqui';
 
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${client.name}</td>
-                <td data-client-id="${client.id}" data-field="prevReading" class="${isFechadoOuNao ? 'read-only-input' : ''}">${invoice.prevReading || 0}</td>
-                <td ${leituraAttrs} data-client-id="${client.id}" data-field="currentReading" title="${leituraTitle}">${invoice.currentReading || ''}</td>
-                <td class="read-only-input">${consumption}</td>
-                <td contenteditable="true" data-client-id="${client.id}" data-field="debt">${(invoice.debt || 0).toFixed(2)}</td>
-                <td contenteditable="true" data-client-id="${client.id}" data-field="customAmount" title="Pode ser editado manualmente">${totalToPay.toFixed(2)}</td>
-            `;
-            invoicesTableBody.appendChild(row);
+            // Filter logic for invoices table
+            const matchesName = client.name.toLowerCase().includes(searchTerm);
+            const matchesId = String(client.id).includes(searchTerm);
+            
+            if (matchesName || matchesId) { // Only render if it matches the search term
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td> <td>${client.name}</td>
+                    <td data-client-id="${client.id}" data-field="prevReading" class="${isFechadoOuNao ? 'read-only-input' : ''}">${invoice.prevReading || 0}</td>
+                    <td ${leituraAttrs} data-client-id="${client.id}" data-field="currentReading" title="${leituraTitle}">${invoice.currentReading || ''}</td>
+                    <td class="read-only-input">${consumption}</td>
+                    <td contenteditable="true" data-client-id="${client.id}" data-field="debt">${(invoice.debt || 0).toFixed(2)}</td>
+                    <td contenteditable="true" data-client-id="${client.id}" data-field="customAmount" title="Pode ser editado manualmente">${totalToPay.toFixed(2)}</td>
+                `;
+                invoicesTableBody.appendChild(row);
+            }
         });
     }
 
@@ -2277,6 +2288,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Search input listeners
     clientSearchClients.addEventListener('input', renderClientsTable);
     clientSearchPayments.addEventListener('input', renderPaymentsTable);
+    invoiceSearch.addEventListener('input', renderInvoicesTable); // Add event listener for invoice search
 
 
     // --- INICIALIZAÇÃO ---
