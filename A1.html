@@ -49,7 +49,6 @@
         }
         .text-danger {
             color: var(--danger-color);
-            font-weight: bold; /* Adicionado para maior destaque */
         }
         .text-success {
             color: var(--success-color);
@@ -433,7 +432,7 @@
             /* 7. Estilo principal para cada recibo na impressão (usado na nova janela de impressão) */
             .recibo-popup {
                 width: 21cm !important; /* Largura total da folha A4 */
-                height: 11.8cm !important; /* MODIFICADO: Altura ajustada para caber dois por página (12.8cm - 8%) */
+                height: 12.8cm !important; /* Altura ajustada para caber dois por página */
                 margin: 0.8cm 0 0.4cm !important; /* Margem superior, sem margens laterais, e inferior reduzida */
                 border: 1px solid black !important;
                 padding: 20px !important; /* Padding do recibo */
@@ -452,27 +451,26 @@
             
             /* Ajustar os tamanhos de fonte para o recibo ficar mais compacto na impressão */
             .recibo-popup .cabecalho .agua-paz {
-                font-size: 15pt; /* MODIFICADO: 16pt -> 15pt */
+                font-size: 16pt;
             }
             .recibo-popup .cabecalho .recibo-num {
-                font-size: 11pt; /* MODIFICADO: 12pt -> 11pt */
+                font-size: 12pt;
             }
             .recibo-popup .linha {
-                font-size: 9pt; /* MODIFICADO: 10pt -> 9pt */
+                font-size: 10pt;
                 line-height: 1.2;
             }
             .recibo-popup .checklist label {
-                font-size: 8pt; /* MODIFICADO: 9pt -> 8pt */
+                font-size: 9pt;
             }
             .recibo-popup .assinatura-maquina {
-                font-size: 10pt; /* MODIFICADO: 11pt -> 10pt */
+                font-size: 11pt;
             }
             .carimbo-overlay {
-                top: 21.7px !important; /* MODIFICADO: Ajuste a posição vertical do carimbo para impressão -35px + 1.5cm (56.7px) */
+                top: -35px !important; /* Ajuste a posição vertical do carimbo para impressão */
                 left: 50%; /* Centraliza horizontalmente */
                 transform: translateX(-50%); /* Ajuste fino para centralizar */
-                width: 383px !important; /* ALTERADO: Original 450px - 15% */
-                margin-left: 132.3px !important; /* Mover 3.5cm para a direita */
+                width: 150px !important; /* Pode ser necessário ajustar o tamanho do carimbo */
             }
 
             /* Estilo da nova linha HR para impressão */
@@ -523,7 +521,7 @@
                 justify-content: space-between !important;
                 align-items: flex-end !important; /* Alinhar texto com a parte de baixo */
                 font-weight: bold !important;
-                font-size: 9pt !important; /* MODIFICADO: 10pt -> 9pt */
+                font-size: 10pt !important; /* Ajuste o tamanho da fonte para impressão */
                 margin-bottom: 5px !important; /* Espaço entre o cabeçalho e os checkboxes */
             }
 
@@ -537,8 +535,7 @@
         /* Estilos do Recibo Separado (apenas para visualização em ecrã, será sobrescrito pelo @media print) */
         .recibo-popup {
             width: 97%;
-            /* A altura em percentagem para ecrã pode permanecer a mesma, pois é relativa ao viewport */
-            height: 45%; 
+            height: 45%; /* Esta altura será sobrescrita pela media query de impressão */
             border: 1px solid black;
             padding: 20px;
             box-sizing: border-box;
@@ -653,11 +650,6 @@
         .data-field-red {
             color: red;
         }
-        .data-field-yellow {
-            color: orange; /* ALTERADO para laranja */
-            font-weight: bold; 
-            font-size: 1.05em; /* Aumentado 5% */
-        }
         .no-underline-month {
             text-decoration: none !important;
             border-bottom: none !important;
@@ -666,14 +658,14 @@
         /* Estilo para a imagem do carimbo */
         .carimbo-overlay {
             position: absolute;
-            top: 13.9px; /* MODIFICADO: Posição vertical original -42.8px + 1.5cm (56.7px) */
+            top: -42.8px; /* Original -5px - 37.8px = -42.8px (1cm para cima) */
             left: 50%; /* Centraliza horizontalmente */
             transform: translateX(-50%); /* Ajuste fino para centralizar */
-            width: 434px; /* ALTERADO: Original 510px - 15% */
+            width: 170px; /* Aumentado de 160px para 170px */
             height: auto;
             opacity: 0.8; /* Opacidade para simular carimbo */
             z-index: 10; /* Garante que fique acima da linha */
-            margin-left: 196.56px; /* ALTERADO: Original 64.26px + 132.3px (3.5cm para a direita) */
+            margin-left: 64.26px; /* Original 113.4px - 49.14px = 64.26px (1.3cm para a esquerda) */
         }
 
 
@@ -746,10 +738,10 @@
             }
             .carimbo-overlay {
                 top: auto !important; /* Reset top for mobile view */
-                bottom: -76.7px; /* MODIFICADO: Posição relativa -20px - 1.5cm (56.7px) */
-                left: 142.3px !important; /* ALTERADO: Original 10px + 132.3px (3.5cm) para a direita */
+                bottom: -20px; /* Position relative to signature area */
+                left: 10px !important; /* Align left with text */
                 transform: translateX(0) !important;
-                width: 255px !important; /* ALTERADO: Original 300px - 15% */
+                width: 100px !important; /* Smaller stamp on mobile */
                 margin-left: 0 !important;
             }
             /* Adjust for stacked layout on small screens */
@@ -806,11 +798,11 @@
                 text-align: right;
             }
             .carimbo-overlay {
-                top: 13.9px !important; /* MODIFICADO: Posição revertida -42.8px + 1.5cm (56.7px) */
+                top: -42.8px !important; /* Revert to original position */
                 left: 50% !important; /* Revert to original position */
                 transform: translateX(-50%) !important;
-                width: 434px !important; /* ALTERADO: Original 510px - 15% */
-                margin-left: 196.56px !important; /* ALTERADO: Original 64.26px + 132.3px (3.5cm para a direita) */
+                width: 170px !important; /* Revert to original size */
+                margin-left: 64.26px !important; /* Revert to original position */
             }
         }
     </style>
@@ -902,7 +894,6 @@
                     <table id="payments-table">
                         <thead>
                             <tr>
-                                <th>Nº</th>
                                 <th>Nome Cliente</th>
                                 <th>Valor Total (MZN)</th>
                                 <th>1º Pagamento (MZN)</th>
@@ -1053,7 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let originalCellValue = null;
     const generatedBinarySignatures = new Set(); // To store unique binary signatures
 
-    // --- Lógica de segurança ---
+    // --- LÓGICA DE SEGURANÇA ---
     function requestVerificationCode(onSuccess, onFail = () => {}) {
         const code = prompt("Para realizar esta ação, por favor, insira o código de verificação:");
         if (code === FIXED_VERIFICATION_CODE) {
@@ -1220,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderInvoicesTable() {
         invoicesTableBody.innerHTML = '';
-        const searchTerm = invoiceSearch.value.toLowerCase(); 
+        const searchTerm = invoiceSearch.value.toLowerCase(); // Get the search term
 
         state.clients.forEach((client, index) => {
             const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
@@ -1229,21 +1220,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const leituraAttrs = isFechadoOuNao ? 'class="read-only-input"' : 'contenteditable="true"';
             const leituraTitle = isFechadoOuNao ? `Não editável (Situação: ${client.situacao})` : 'Insira a nova leitura aqui';
 
+            // Filter logic for invoices table
             const matchesName = client.name.toLowerCase().includes(searchTerm);
             const matchesId = String(client.id).includes(searchTerm);
             
-            if (matchesName || matchesId) { 
-                // Garantir que a dívida seja tratada como um número para a comparação.
-                const debtValue = parseFloat(invoice.debt || 0); 
-                const debtClass = debtValue > 1124 ? 'text-danger' : '';
-
+            if (matchesName || matchesId) { // Only render if it matches the search term
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${index + 1}</td> <td>${client.name}</td>
                     <td data-client-id="${client.id}" data-field="prevReading" class="${isFechadoOuNao ? 'read-only-input' : ''}">${invoice.prevReading || 0}</td>
                     <td ${leituraAttrs} data-client-id="${client.id}" data-field="currentReading" title="${leituraTitle}">${invoice.currentReading || ''}</td>
                     <td class="read-only-input">${consumption}</td>
-                    <td contenteditable="true" data-client-id="${client.id}" data-field="debt" class="${debtClass}">${debtValue.toFixed(2)}</td>
+                    <td contenteditable="true" data-client-id="${client.id}" data-field="debt">${(invoice.debt || 0).toFixed(2)}</td>
                     <td contenteditable="true" data-client-id="${client.id}" data-field="customAmount" title="Pode ser editado manualmente">${totalToPay.toFixed(2)}</td>
                 `;
                 invoicesTableBody.appendChild(row);
@@ -1261,7 +1249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return matchesName || matchesId;
         });
 
-        filteredClients.forEach((client, index) => {
+        filteredClients.forEach(client => {
             const { totalToPay } = calculateInvoiceTotals(client.id);
             const payment = state.payments[client.id] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
             const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
@@ -1274,7 +1262,6 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             row.innerHTML = `
-                <td>${index + 1}</td>
                 <td>${client.name}</td>
                 <td class="read-only-input">${totalToPay.toFixed(2)}</td>
                 <td class="payment-cell" data-client-id="${client.id}" data-field="p1">
@@ -1330,7 +1317,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="${remaining > 0 ? 'text-danger' : 'text-success'} read-only-input">${remaining.toFixed(2)}</td>
                 <td class="actions-cell">
-                    <button class="btn-warning" data-action="generate-contract-receipt" data-id="${contractId}">Recibo</button>
                     <button class="btn-danger" data-action="delete-contract" data-id="${contractId}">Remover</button>
                 </td>
             `;
@@ -1343,10 +1329,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const generatedInvoiceNumbers = new Set();
 
         const now = new Date();
-        const lastMonthDate = new Date();
-        lastMonthDate.setDate(0);
-        const monthName = lastMonthDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
-        const year = lastMonthDate.getFullYear();
+        const monthName = now.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
+        const year = now.getFullYear();
 
         // FILTRAR APENAS CLIENTES COM SITUAÇÃO 'A' PRIMEIRO
         let clientsToPrint = state.clients.filter(client => client.situacao === 'A');
@@ -1375,11 +1359,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const payment = state.payments[client.id] || { p1: { amount: 0 }, p2: { amount: 0 }, p3: { amount: 0 } };
             const { totalToPay } = calculateInvoiceTotals(client.id);
             const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
-            
             const valorEmFalta = totalToPay - totalPaid;
-            const debtForReceipt = valorEmFalta; // Manter como número para comparação
-            const debtClassForReceipt = debtForReceipt > 1124 ? 'text-danger' : ''; // MODIFICAÇÃO
-            
+            const debtForReceipt = valorEmFalta.toFixed(2);
             const prevReadingForReceipt = invoice.prevReading || 0;
             const counterNumber = String(client.id).padStart(3, '0'); // Usar o ID do cliente como número do contador
 
@@ -1391,13 +1372,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="receipt-body">
                     <p>
-                        <strong>FACTURA Nº</strong><span class="data-field data-field-blue">${invoiceNumber}</span>
-                        <strong>MÊS DE</strong><span class="data-field data-field-blue">${monthName}</span>
-                        <strong>ANO</strong><span class="data-field data-field-blue">${year}</span>
-                        <strong>CONTADOR Nº</strong><span class="data-field data-field-blue">${counterNumber}</span>
+                        <strong>FACTURA Nº</strong><span class="data-field">${invoiceNumber}</span>
+                        <strong>MÊS DE</strong><span class="data-field">${monthName}</span>
+                        <strong>ANO</strong><span class="data-field">${year}</span>
+                        <strong>CONTADOR Nº</strong><span class="data-field">${counterNumber}</span>
                     </p>
                     <p>
-                        Para efeitos e fins julgados convenientes, declaramos que a fatura do(a) Sr(a).<span class="data-field data-field-blue">${client.name}</span>
+                        Para efeitos e fins julgados convenientes, declaramos que a fatura do(a) Sr(a).<span class="data-field">${client.name}</span>
                         residente na casa nº <span class="data-field">___________</span>
                         tem de pagar a quantia de <span class="data-field">__________</span> MZN
                         o valor do consumo mínimo é de 375MZN.
@@ -1424,7 +1405,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <tr>
                                 <td colspan="4"></td>
                                 <td>Dívida</td>
-                                <td><span class="data-field ${debtClassForReceipt}">${debtForReceipt.toFixed(2)} MZN</span></td>
+                                <td><span class="data-field">${debtForReceipt} MZN</span></td>
                             </tr>
                             <tr>
                                 <td colspan="4"></td>
@@ -1533,6 +1514,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
         const valorEmFalta = totalToPay - totalPaid;
 
+        // Determine the last payment and its amount
         let lastPaymentAmount = 0;
         let lastPaymentDate = null;
         if (payment.p3.amount > 0 && payment.p3.date) {
@@ -1546,51 +1528,52 @@ document.addEventListener('DOMContentLoaded', () => {
             lastPaymentDate = new Date(payment.p1.date);
         }
 
-        const receiptDate = lastPaymentDate || new Date();
-        const day = String(receiptDate.getDate()).padStart(2, '0');
-        const receiptMonthText = receiptDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
-        const fullYear = String(receiptDate.getFullYear());
-        
-        // Lógica para obter o mês anterior (mês da fatura)
-        const invoiceDate = new Date();
-        invoiceDate.setDate(1); // Evita problemas com meses de durações diferentes
-        invoiceDate.setMonth(invoiceDate.getMonth() - 1);
-        const invoiceMonthName = invoiceDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
+        const now = lastPaymentDate || new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const monthText = now.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
+        const fullYear = String(now.getFullYear());
 
-        const counterNumber = String(client.id).padStart(3, '0');
-        const amountInWords = numberToWords(lastPaymentAmount); 
+        const amountInWords = numberToWords(lastPaymentAmount); // Now includes "Meticais" suffix
 
+        // This function will add underscores only if the content is shorter than maxLength
         const fillWithUnderscores = (text, maxLength) => {
             const currentLength = String(text).length;
             if (currentLength >= maxLength) return String(text);
             return String(text) + '_'.repeat(maxLength - currentLength);
         };
+
+        // This function adds a class to hide the border if the text fills the space
         const getUnderlineClass = (text, maxLength) => {
+            // For strings with underscores, we want the underline to show if it's shorter
+            // For data like signature that shouldn't have underline if not filled, use a specific check
             return String(text).length >= maxLength ? 'no-underline' : '';
         };
 
         const machineSignature = generateUniqueBinarySignature();
-        const valorEmFaltaClass = valorEmFalta > 1124 ? 'data-field-red' : 'data-field-blue';
 
+        // Determine the color class for 'valorEmFalta'
+        const valorEmFaltaClass = valorEmFalta > 1499 ? 'data-field-red' : 'data-field-blue';
+
+        // Function to generate a single receipt's HTML
         const createSingleReceiptHTML = () => {
-            const receiptText = `à fatura de consumo de água do mês de ${invoiceMonthName}`;
             return `
             <div class="recibo-popup">
                 <div class="cabecalho">
                   <div class="agua-paz">ÁGUA PAZ (TEMBE)</div>
-                  <div class="recibo-num"> <span class="fill-underline ${getUnderlineClass(day, 2)} data-field-blue">${fillWithUnderscores(day, 2)}</span> DE <span class="fill-underline no-underline-month ${getUnderlineClass(receiptMonthText, 10)} data-field-blue">${fillWithUnderscores(receiptMonthText, 10)}</span> DE <span class="fill-underline ${getUnderlineClass(fullYear, 4)} data-field-blue">${fullYear}</span> <br /><br />PAGO <span class="fill-underline ${getUnderlineClass(lastPaymentAmount.toFixed(2), 10)} data-field-blue">${fillWithUnderscores(lastPaymentAmount.toFixed(2), 10)}</span> MT</div>
+                  <div class="recibo-num"> <span class="fill-underline ${getUnderlineClass(day, 2)} data-field-blue">${fillWithUnderscores(day, 2)}</span> DE <span class="fill-underline no-underline-month ${getUnderlineClass(monthText, 10)} data-field-blue">${fillWithUnderscores(monthText, 10)}</span> DE <span class="fill-underline ${getUnderlineClass(fullYear, 4)} data-field-blue">${fullYear}</span> <br /><br />PAGO <span class="fill-underline ${getUnderlineClass(lastPaymentAmount.toFixed(2), 10)} data-field-blue">${fillWithUnderscores(lastPaymentAmount.toFixed(2), 10)}</span> MT</div>
                 </div>
 
-                <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, contador nº <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
+                <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(client.name, 60)}</span></div>
                 <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
-                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Valor Remanescente <span class="fill-underline ${getUnderlineClass(valorEmFalta.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(valorEmFalta.toFixed(2), 10)}</span> MT</div>
+                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass('Pagamento de Consumo de Água', 50)} data-field-blue" style="width: 50%;">Pagamento de Consumo de Água</span> Remanescente <span class="fill-underline ${getUnderlineClass(valorEmFalta.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(valorEmFalta.toFixed(2), 10)}</span> MT</div>
 
                 <div class="linha">de que passamos o presente recibo.</div>
+
                 <div class="linha"></div>
 
                 <div class="receipt-top-info">
                   <span class="payment-form-header">Forma de pagamento:</span>
-                  <span class="assinatura-header">Assinatura: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                  <span class="assinatura-header">Assinatura e carimbo:</span>
                 </div>
 
                 <div class="assinatura-checklist-container">
@@ -1604,118 +1587,13 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div class="assinatura">
                     <span class="fill-underline" style="width: 25ch;"></span>
                     <img src="carimbo.png" alt="Carimbo" class="carimbo-overlay">
-                    <br> <br> <strong>ID DO RECIBO&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </strong> <br /> <br><span class="fill-underline no-underline data-field-yellow">${machineSignature}</span>
+                    <br> <br> ASSINATURA MÁQUINA <br /> <br><span class="fill-underline no-underline data-field-blue">${machineSignature}</span>
                   </div>
                 </div>
               </div>
             `;
         };
 
-        const receiptTitle = String(client.id).padStart(3, '0');
-        openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
-    }
-
-    // NOVA FUNÇÃO PARA GERAR RECIBO DE CONTRATO
-    function generateContractReceipt(contractId) {
-        const contract = state.contracts[contractId];
-        if (!contract) {
-            alert("Contrato não encontrado.");
-            return;
-        }
-        const client = state.clients.find(c => c.id == contract.clientId);
-        if (!client) {
-            alert("Cliente associado ao contrato não encontrado.");
-            return;
-        }
-
-        const payment = contract.payments;
-        const { remaining } = calculateContractTotals(contractId);
-        
-        let lastPaymentAmount = 0;
-        let lastPaymentDate = null;
-        if (payment.p3.amount > 0 && payment.p3.date) {
-            lastPaymentAmount = payment.p3.amount;
-            lastPaymentDate = new Date(payment.p3.date);
-        } else if (payment.p2.amount > 0 && payment.p2.date) {
-            lastPaymentAmount = payment.p2.amount;
-            lastPaymentDate = new Date(payment.p2.date);
-        } else if (payment.p1.amount > 0 && payment.p1.date) {
-            lastPaymentAmount = payment.p1.amount;
-            lastPaymentDate = new Date(payment.p1.date);
-        }
-
-        if (lastPaymentAmount === 0) {
-            alert("Não existe nenhum pagamento registado para este contrato.");
-            return;
-        }
-
-        const receiptDate = lastPaymentDate || new Date();
-        const day = String(receiptDate.getDate()).padStart(2, '0');
-        const receiptMonthText = receiptDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
-        const fullYear = String(receiptDate.getFullYear());
-        
-        const counterNumber = String(client.id).padStart(3, '0');
-        const amountInWords = numberToWords(lastPaymentAmount);
-
-        const fillWithUnderscores = (text, maxLength) => {
-            const currentLength = String(text).length;
-            if (currentLength >= maxLength) return String(text);
-            return String(text) + '_'.repeat(maxLength - currentLength);
-        };
-        const getUnderlineClass = (text, maxLength) => {
-            return String(text).length >= maxLength ? 'no-underline' : '';
-        };
-
-        const machineSignature = generateUniqueBinarySignature();
-        const valorEmFaltaClass = remaining > 0 ? 'data-field-red' : 'data-field-blue';
-
-        const createSingleReceiptHTML = () => {
-            const receiptText = 'à prestação do contrato de água';
-            return `
-            <div class="recibo-popup">
-                <div class="cabecalho">
-                  <div class="agua-paz">ÁGUA PAZ (TEMBE)</div>
-                  <div class="recibo-num"> <span class="fill-underline ${getUnderlineClass(day, 2)} data-field-blue">${fillWithUnderscores(day, 2)}</span> DE <span class="fill-underline no-underline-month ${getUnderlineClass(receiptMonthText, 10)} data-field-blue">${fillWithUnderscores(receiptMonthText, 10)}</span> DE <span class="fill-underline ${getUnderlineClass(fullYear, 4)} data-field-blue">${fullYear}</span> <br /><br />PAGO <span class="fill-underline ${getUnderlineClass(lastPaymentAmount.toFixed(2), 10)} data-field-blue">${fillWithUnderscores(lastPaymentAmount.toFixed(2), 10)}</span> MT</div>
-                </div>
-
-                <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, contador nº <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
-                <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
-                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Valor Remanescente <span class="fill-underline ${getUnderlineClass(remaining.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(remaining.toFixed(2), 10)}</span> MT</div>
-
-                <div class="linha">de que passamos o presente recibo.</div>
-                <div class="linha"></div>
-
-                <div class="receipt-top-info">
-                  <span class="payment-form-header">Forma de pagamento:</span>
-                  <span class="assinatura-header">Assinatura: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                </div>
-
-                <div class="assinatura-checklist-container">
-                  <div class="checklist">
-                    <label><input type="checkbox"> Cheque nº <span class="fill-underline" style="width: 15ch;"></span></label><br>
-                    <label><input type="checkbox"> Banco <span class="fill-underline" style="width: 18ch;"></span></label><br>
-                    <label><input type="checkbox"> Outros</label><br>
-                    <label><input type="checkbox" checked> Em numerário</label>
-                  </div>
-
-                  <div class="assinatura">
-                    <span class="fill-underline" style="width: 25ch;"></span>
-                    <img src="carimbo.png" alt="Carimbo" class="carimbo-overlay">
-                    <br> <br> <strong>ID DO RECIBO&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </strong> <br /> <br><span class="fill-underline no-underline data-field-yellow">${machineSignature}</span>
-                  </div>
-                </div>
-              </div>
-            `;
-        };
-        
-        const receiptTitle = String(client.id).padStart(3, '0');
-        openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
-    }
-
-
-    // FUNÇÃO AUXILIAR PARA ABRIR JANELA DE IMPRESSÃO (Evita repetição de código)
-    function openReceiptInNewWindow(htmlContent, title) {
-        const safeTitle = title || 'Recibo de Pagamento'; // Usa um título padrão se nenhum for fornecido
         const newWindow = window.open('', '_blank', 'width=800,height=600');
         newWindow.document.open();
         newWindow.document.write(`
@@ -1723,7 +1601,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <html lang="pt">
         <head>
           <meta charset="UTF-8">
-          <title>${safeTitle}</title>
+          <title>Recibos de Pagamento</title>
           <style>
             @media print {
               body {
@@ -1739,7 +1617,7 @@ document.addEventListener('DOMContentLoaded', () => {
               }
               .recibo-popup {
                   width: 21cm !important; /* Largura total da folha A4 */
-                  height: 11.8cm !important; /* MODIFICADO: Altura ajustada para dois recibos na A4 (12.8cm - 8%) */
+                  height: 12.8cm !important; /* Altura calculada para dois recibos na A4 (29.7cm / 2 = 14.85cm. Ajustado para caber com pequenas margens) */
                   margin: 0.8cm 0 0.4cm !important; /* Margem superior, sem margens laterais, e inferior reduzida */
                   border: 1px solid black !important;
                   box-sizing: border-box !important;
@@ -1751,25 +1629,25 @@ document.addEventListener('DOMContentLoaded', () => {
               
                /* Ajustar os tamanhos de fonte para o recibo ficar mais compacto na impressão */
               .recibo-popup .cabecalho .agua-paz {
-                  font-size: 15pt; /* MODIFICADO */
+                  font-size: 16pt;
               }
               .recibo-popup .cabecalho .recibo-num {
-                  font-size: 11pt; /* MODIFICADO */
+                  font-size: 12pt;
               }
               .recibo-popup .linha {
-                  font-size: 9pt; /* MODIFICADO */
+                  font-size: 10pt;
                   line-height: 1.2;
               }
               .recibo-popup .checklist label {
-                  font-size: 8pt; /* MODIFICADO */
+                  font-size: 9pt;
               }
               .recibo-popup .assinatura-maquina {
-                  font-size: 10pt; /* MODIFICADO */
+                  font-size: 11pt;
               }
                .carimbo-overlay {
-                    top: 21.7px !important; /* MODIFICADO: Ajuste a posição vertical do carimbo para impressão -35px + 1.5cm (56.7px) */
-                    margin-left: 187.3px !important; /* ALTERADO: Original 55px + 132.3px (3.5cm) para a direita */
-                    width: 383px !important; /* ALTERADO: Original 450px - 15% */
+                    top: -35px !important; /* Ajuste a posição vertical do carimbo para impressão */
+                    margin-left: 55px !important; /* Ajuste a posição horizontal do carimbo para impressão */
+                    width: 150px !important; /* Pode ser necessário ajustar o tamanho do carimbo */
                 }
             /* Estilo da nova linha HR para impressão */
             .receipt-divider-print {
@@ -1819,7 +1697,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 justify-content: space-between !important;
                 align-items: flex-end !important; /* Alinhar texto com a parte de baixo */
                 font-weight: bold !important;
-                font-size: 9pt !important; /* MODIFICADO */
+                font-size: 10pt !important; /* Ajuste o tamanho da fonte para impressão */
                 margin-bottom: 5px !important; /* Espaço entre o cabeçalho e os checkboxes */
             }
 
@@ -1943,44 +1821,37 @@ document.addEventListener('DOMContentLoaded', () => {
             .data-field-red {
                 color: red;
             }
-            .data-field-yellow {
-                color: orange;
-                font-weight: bold;
-                font-size: 1.05em;
-            }
             .no-underline-month {
                 text-decoration: none !important;
                 border-bottom: none !important;
             }
             .carimbo-overlay {
                 position: absolute;
-                top: 13.9px; /* MODIFICADO */
+                top: -42.8px;
                 left: 50%;
                 transform: translateX(-50%);
-                width: 434px; /* ALTERADO: Original 510px - 15% */
+                width: 170px;
                 height: auto;
                 opacity: 0.8;
                 z-index: 10;
-                margin-left: 196.56px; /* ALTERADO: Original 64.26px + 132.3px (3.5cm para a direita) */
+                margin-left: 64.26px;
             }
             /* Adjustments for the carimbo in the popup, especially if .recibo-popup .assinatura is text-align: left */
             @media (max-width: 768px) {
                 .carimbo-overlay {
                     top: auto !important; /* Reset top */
-                    bottom: -76.7px; /* MODIFICADO */
-                    left: 142.3px !important; /* ALTERADO: Original 10px + 132.3px (3.5cm) para a direita */
+                    bottom: -20px; /* Position relative to signature area */
+                    left: 10px !important; /* Align left with text */
                     transform: translateX(0) !important;
-                    width: 255px !important; /* ALTERADO: Original 300px - 15% */
+                    width: 100px !important; /* Smaller stamp */
                     margin-left: 0 !important;
                 }
             }
           </style>
         </head>
         <body>
-          ${htmlContent}
-          <hr class="receipt-divider-print">
-          ${htmlContent}
-        </body>
+          ${createSingleReceiptHTML()}
+          <hr class="receipt-divider-print"> ${createSingleReceiptHTML()} </body>
         </html>
         `);
         newWindow.document.close();
@@ -2419,7 +2290,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target;
         const action = target.dataset.action;
         const contractId = target.dataset.id;
-        
         if (action === 'delete-contract') {
             if (confirm(`Tem a certeza que deseja remover o contrato #${contractId}? Esta ação não pode ser desfeita.`)) {
                 requestVerificationCode(() => {
@@ -2428,8 +2298,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderContractsTable();
                 });
             }
-        } else if (action === 'generate-contract-receipt') {
-            generateContractReceipt(contractId);
         }
     });
 

@@ -1343,10 +1343,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const generatedInvoiceNumbers = new Set();
 
         const now = new Date();
-        const lastMonthDate = new Date();
-        lastMonthDate.setDate(0);
-        const monthName = lastMonthDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
-        const year = lastMonthDate.getFullYear();
+        const monthName = now.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
+        const year = now.getFullYear();
 
         // FILTRAR APENAS CLIENTES COM SITUAÇÃO 'A' PRIMEIRO
         let clientsToPrint = state.clients.filter(client => client.situacao === 'A');
@@ -1572,6 +1570,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const machineSignature = generateUniqueBinarySignature();
         const valorEmFaltaClass = valorEmFalta > 1124 ? 'data-field-red' : 'data-field-blue';
 
+        // Function to generate a single receipt's HTML
         const createSingleReceiptHTML = () => {
             const receiptText = `à fatura de consumo de água do mês de ${invoiceMonthName}`;
             return `
@@ -1585,7 +1584,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
                 <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Valor Remanescente <span class="fill-underline ${getUnderlineClass(valorEmFalta.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(valorEmFalta.toFixed(2), 10)}</span> MT</div>
 
-                <div class="linha">de que passamos o presente recibo.</div>
+                <div class="linha">motivo pelo qual passamos o presente recibo.</div>
                 <div class="linha"></div>
 
                 <div class="receipt-top-info">
@@ -1611,8 +1610,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         };
 
-        const receiptTitle = String(client.id).padStart(3, '0');
-        openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
+        openReceiptInNewWindow(createSingleReceiptHTML());
     }
 
     // NOVA FUNÇÃO PARA GERAR RECIBO DE CONTRATO
@@ -1682,7 +1680,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
                 <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Valor Remanescente <span class="fill-underline ${getUnderlineClass(remaining.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(remaining.toFixed(2), 10)}</span> MT</div>
 
-                <div class="linha">de que passamos o presente recibo.</div>
+                <div class="linha">motivo polo qual passamos o presente recibo.</div>
                 <div class="linha"></div>
 
                 <div class="receipt-top-info">
@@ -1708,22 +1706,20 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         };
         
-        const receiptTitle = String(client.id).padStart(3, '0');
-        openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
+        openReceiptInNewWindow(createSingleReceiptHTML());
     }
 
 
     // FUNÇÃO AUXILIAR PARA ABRIR JANELA DE IMPRESSÃO (Evita repetição de código)
-    function openReceiptInNewWindow(htmlContent, title) {
-        const safeTitle = title || 'Recibo de Pagamento'; // Usa um título padrão se nenhum for fornecido
-        const newWindow = window.open('', '_blank', 'width=800,height=600');
+    function openReceiptInNewWindow(htmlContent) {
+         const newWindow = window.open('', '_blank', 'width=800,height=600');
         newWindow.document.open();
         newWindow.document.write(`
         <!DOCTYPE html>
         <html lang="pt">
         <head>
           <meta charset="UTF-8">
-          <title>${safeTitle}</title>
+          <title>Recibos de Pagamento</title>
           <style>
             @media print {
               body {
