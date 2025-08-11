@@ -1343,8 +1343,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const generatedInvoiceNumbers = new Set();
 
         const now = new Date();
-        const monthName = now.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
-        const year = now.getFullYear();
+        const lastMonthDate = new Date();
+        lastMonthDate.setDate(0);
+        const monthName = lastMonthDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
+        const year = lastMonthDate.getFullYear();
 
         // FILTRAR APENAS CLIENTES COM SITUAÇÃO 'A' PRIMEIRO
         let clientsToPrint = state.clients.filter(client => client.situacao === 'A');
@@ -1570,7 +1572,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const machineSignature = generateUniqueBinarySignature();
         const valorEmFaltaClass = valorEmFalta > 1124 ? 'data-field-red' : 'data-field-blue';
 
-        // Function to generate a single receipt's HTML
         const createSingleReceiptHTML = () => {
             const receiptText = `à fatura de consumo de água do mês de ${invoiceMonthName}`;
             return `
@@ -1582,9 +1583,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, contador nº <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
                 <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
-                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Valor Remanescente <span class="fill-underline ${getUnderlineClass(valorEmFalta.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(valorEmFalta.toFixed(2), 10)}</span> MT</div>
+                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div>
+                <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Remanescente <span class="fill-underline ${getUnderlineClass(valorEmFalta.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(valorEmFalta.toFixed(2), 10)}</span> MT, motivo pelo qual passamos o presente recibo.</div>
 
-                <div class="linha">motivo pelo qual passamos o presente recibo.</div>
                 <div class="linha"></div>
 
                 <div class="receipt-top-info">
@@ -1610,7 +1611,8 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         };
 
-        openReceiptInNewWindow(createSingleReceiptHTML());
+        const receiptTitle = String(client.id).padStart(3, '0');
+        openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
     }
 
     // NOVA FUNÇÃO PARA GERAR RECIBO DE CONTRATO
@@ -1668,7 +1670,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const valorEmFaltaClass = remaining > 0 ? 'data-field-red' : 'data-field-blue';
 
         const createSingleReceiptHTML = () => {
-            const receiptText = 'à prestação do contrato de água';
+            const receiptText = 'à prestação do contrato de água no valor de cinco mil Meticais.';
             return `
             <div class="recibo-popup">
                 <div class="cabecalho">
@@ -1678,9 +1680,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, contador nº <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
                 <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
-                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Valor Remanescente <span class="fill-underline ${getUnderlineClass(remaining.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(remaining.toFixed(2), 10)}</span> MT</div>
+                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div>
+                <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Remanescente <span class="fill-underline ${getUnderlineClass(remaining.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(remaining.toFixed(2), 10)}</span> MT, motivo pelo qual passamos o presente recibo.</div>
 
-                <div class="linha">motivo polo qual passamos o presente recibo.</div>
                 <div class="linha"></div>
 
                 <div class="receipt-top-info">
@@ -1706,20 +1708,22 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         };
         
-        openReceiptInNewWindow(createSingleReceiptHTML());
+        const receiptTitle = String(client.id).padStart(3, '0');
+        openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
     }
 
 
     // FUNÇÃO AUXILIAR PARA ABRIR JANELA DE IMPRESSÃO (Evita repetição de código)
-    function openReceiptInNewWindow(htmlContent) {
-         const newWindow = window.open('', '_blank', 'width=800,height=600');
+    function openReceiptInNewWindow(htmlContent, title) {
+        const safeTitle = title || 'Recibo de Pagamento'; // Usa um título padrão se nenhum for fornecido
+        const newWindow = window.open('', '_blank', 'width=800,height=600');
         newWindow.document.open();
         newWindow.document.write(`
         <!DOCTYPE html>
         <html lang="pt">
         <head>
           <meta charset="UTF-8">
-          <title>Recibos de Pagamento</title>
+          <title>${safeTitle}</title>
           <style>
             @media print {
               body {

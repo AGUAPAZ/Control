@@ -1583,9 +1583,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, contador nº <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
                 <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
-                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Valor Remanescente <span class="fill-underline ${getUnderlineClass(valorEmFalta.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(valorEmFalta.toFixed(2), 10)}</span> MT</div>
+                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div>
+                <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Remanescente <span class="fill-underline ${getUnderlineClass(valorEmFalta.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(valorEmFalta.toFixed(2), 10)}</span> MT, motivo pelo qual passamos o presente recibo.</div>
 
-                <div class="linha">de que passamos o presente recibo.</div>
                 <div class="linha"></div>
 
                 <div class="receipt-top-info">
@@ -1670,7 +1670,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const valorEmFaltaClass = remaining > 0 ? 'data-field-red' : 'data-field-blue';
 
         const createSingleReceiptHTML = () => {
-            const receiptText = 'à prestação do contrato de água';
+            const receiptText = 'à prestação do contrato de água no valor de cinco mil Meticais.';
             return `
             <div class="recibo-popup">
                 <div class="cabecalho">
@@ -1680,9 +1680,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, contador nº <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
                 <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
-                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div> <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Valor Remanescente <span class="fill-underline ${getUnderlineClass(remaining.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(remaining.toFixed(2), 10)}</span> MT</div>
+                <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div>
+                <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Remanescente <span class="fill-underline ${getUnderlineClass(remaining.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(remaining.toFixed(2), 10)}</span> MT, motivo pelo qual passamos o presente recibo.</div>
 
-                <div class="linha">de que passamos o presente recibo.</div>
                 <div class="linha"></div>
 
                 <div class="receipt-top-info">
