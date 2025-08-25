@@ -110,6 +110,10 @@
              background-color: var(--warning-color);
              color: var(--dark-color);
         }
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
         .btn-icon {
             padding: 0.5rem;
             line-height: 1;
@@ -1211,6 +1215,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="action-buttons">
                         <button class="btn-warning" data-action="edit" data-id="${client.id}">Editar</button>
                         <button class="btn-danger" data-action="delete" data-id="${client.id}">Remover</button>
+                        <button class="btn-secondary" data-action="reset-meter" data-id="${client.id}" title="Zerar leituras para simular troca de contador">Trocar Contador</button>
                     </div>
                 </td>
             `;
@@ -1226,22 +1231,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
             const { consumption, totalToPay } = calculateInvoiceTotals(client.id);
             const isFechadoOuNao = client.situacao === 'F' || client.situacao === 'N';
-            const leituraAttrs = isFechadoOuNao ? 'class="read-only-input"' : 'contenteditable="true"';
-            const leituraTitle = isFechadoOuNao ? `Não editável (Situação: ${client.situacao})` : 'Insira a nova leitura aqui';
+            
+            const prevReadingAttrs = isFechadoOuNao 
+                ? `class="read-only-input" title="Não editável (Situação: ${client.situacao})"` 
+                : '';
+            const currentReadingAttrs = isFechadoOuNao 
+                ? `class="read-only-input" title="Não editável (Situação: ${client.situacao})"`
+                : `contenteditable="true" title="Insira a nova leitura aqui"`;
 
             const matchesName = client.name.toLowerCase().includes(searchTerm);
             const matchesId = String(client.id).includes(searchTerm);
             
             if (matchesName || matchesId) { 
-                // Garantir que a dívida seja tratada como um número para a comparação.
                 const debtValue = parseFloat(invoice.debt || 0); 
                 const debtClass = debtValue > 1124 ? 'text-danger' : '';
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${index + 1}</td> <td>${client.name}</td>
-                    <td data-client-id="${client.id}" data-field="prevReading" class="${isFechadoOuNao ? 'read-only-input' : ''}">${invoice.prevReading || 0}</td>
-                    <td ${leituraAttrs} data-client-id="${client.id}" data-field="currentReading" title="${leituraTitle}">${invoice.currentReading || ''}</td>
+                    <td>${client.id}</td>
+                    <td>${client.name}</td>
+                    <td data-client-id="${client.id}" data-field="prevReading" ${prevReadingAttrs}>${invoice.prevReading || 0}</td>
+                    <td data-client-id="${client.id}" data-field="currentReading" ${currentReadingAttrs}>${invoice.currentReading || ''}</td>
                     <td class="read-only-input">${consumption}</td>
                     <td contenteditable="true" data-client-id="${client.id}" data-field="debt" class="${debtClass}">${debtValue.toFixed(2)}</td>
                     <td contenteditable="true" data-client-id="${client.id}" data-field="customAmount" title="Pode ser editado manualmente">${totalToPay.toFixed(2)}</td>
@@ -1274,7 +1284,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             row.innerHTML = `
-                <td>${index + 1}</td>
+                <td>${client.id}</td>
                 <td>${client.name}</td>
                 <td class="read-only-input">${totalToPay.toFixed(2)}</td>
                 <td class="payment-cell" data-client-id="${client.id}" data-field="p1">
@@ -1581,7 +1591,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div class="recibo-num"> <span class="fill-underline ${getUnderlineClass(day, 2)} data-field-blue">${fillWithUnderscores(day, 2)}</span> DE <span class="fill-underline no-underline-month ${getUnderlineClass(receiptMonthText, 10)} data-field-blue">${fillWithUnderscores(receiptMonthText, 10)}</span> DE <span class="fill-underline ${getUnderlineClass(fullYear, 4)} data-field-blue">${fullYear}</span> <br /><br />PAGO <span class="fill-underline ${getUnderlineClass(lastPaymentAmount.toFixed(2), 10)} data-field-blue">${fillWithUnderscores(lastPaymentAmount.toFixed(2), 10)}</span> MT</div>
                 </div>
 
-                <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, contador nº <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
+                <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, portador do contador : <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
                 <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
                 <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div>
                 <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Remanescente <span class="fill-underline ${getUnderlineClass(valorEmFalta.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(valorEmFalta.toFixed(2), 10)}</span> MT, motivo pelo qual passamos o presente recibo.</div>
@@ -1678,7 +1688,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div class="recibo-num"> <span class="fill-underline ${getUnderlineClass(day, 2)} data-field-blue">${fillWithUnderscores(day, 2)}</span> DE <span class="fill-underline no-underline-month ${getUnderlineClass(receiptMonthText, 10)} data-field-blue">${fillWithUnderscores(receiptMonthText, 10)}</span> DE <span class="fill-underline ${getUnderlineClass(fullYear, 4)} data-field-blue">${fullYear}</span> <br /><br />PAGO <span class="fill-underline ${getUnderlineClass(lastPaymentAmount.toFixed(2), 10)} data-field-blue">${fillWithUnderscores(lastPaymentAmount.toFixed(2), 10)}</span> MT</div>
                 </div>
 
-                <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, contador nº <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
+                <div class="linha">Recebemos do Exmo Sr.(a). <span class="fill-underline ${getUnderlineClass(client.name, 40)} data-field-blue">${fillWithUnderscores(client.name, 40)}</span>, portador do contador : <span class="fill-underline ${getUnderlineClass(counterNumber, 5)} data-field-blue">${fillWithUnderscores(counterNumber, 5)}</span></div>
                 <div class="linha">a importância de <span class="fill-underline ${getUnderlineClass(amountInWords, 60)} data-field-blue" style="width: 70%;">${fillWithUnderscores(amountInWords, 60)}</span></div>
                 <div class="linha"><span class="fill-underline no-underline" style="width: 98%;"></span></div>
                 <div class="linha">referente <span class="fill-underline ${getUnderlineClass(receiptText, 70)} data-field-blue">${receiptText}</span> Remanescente <span class="fill-underline ${getUnderlineClass(remaining.toFixed(2), 10)} ${valorEmFaltaClass}">${fillWithUnderscores(remaining.toFixed(2), 10)}</span> MT, motivo pelo qual passamos o presente recibo.</div>
@@ -2069,6 +2079,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const action = target.dataset.action;
         const id = target.dataset.id;
         if (!action || !id) return;
+
         if (action === 'edit') {
             const client = state.clients.find(c => c.id == id);
             if (client) {
@@ -2095,6 +2106,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderAllTables();
                 });
             }
+        } else if (action === 'reset-meter') { // <<< NOVA LÓGICA AQUI
+            if (confirm(`Tem a certeza que deseja simular a troca do contador para o cliente #${id}? A dívida atual será calculada e transferida, e as leituras serão zeradas.`)) {
+                requestVerificationCode(() => {
+                    const invoice = state.invoices[id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
+                    const payment = state.payments[id] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
+                    
+                    // Calcular o valor remanescente do ciclo atual
+                    const { totalToPay } = calculateInvoiceTotals(id);
+                    const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
+                    const remainingAmount = totalToPay - totalPaid;
+
+                    // Atualizar a fatura para o "novo contador"
+                    state.invoices[id].debt = remainingAmount > 0 ? remainingAmount : 0;
+                    state.invoices[id].prevReading = 0; // Zerar leitura anterior
+                    state.invoices[id].currentReading = 0; // Zerar leitura atual
+                    state.invoices[id].customAmount = null;
+
+                    // Reiniciar os pagamentos para o novo ciclo
+                    state.payments[id] = { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
+
+                    saveData();
+                    renderAllTables();
+                    alert(`Contador para o cliente #${id} foi trocado com sucesso. Leituras zeradas e dívida atualizada.`);
+                });
+            }
         }
     });
 
@@ -2105,7 +2141,6 @@ document.addEventListener('DOMContentLoaded', () => {
             generateReceipt(clientId);
         }
     });
-
 
     function handleSituacaoChange(e) {
         const select = e.target;
@@ -2124,21 +2159,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const { totalToPay } = calculateInvoiceTotals(clientId);
                 const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
                 const valorEmFalta = totalToPay - totalPaid;
-                invoice.prevReading = invoice.currentReading;
-                invoice.currentReading = 0; // Reset current reading
-                invoice.customAmount = valorEmFalta + 375; // Add minimum payment for remaining debt
-                invoice.debt = 0; // Debt is now part of customAmount
+                
+                invoice.customAmount = valorEmFalta + 375;
+                invoice.debt = 0;
             } else if (originalSituacao === 'N' && newSituacao !== 'N') {
                 invoice.customAmount = null;
-            } else if (newSituacao === 'F') { // If changing to 'F' (Fechada)
-                const { totalToPay } = calculateInvoiceTotals(clientId); // Re-calculate based on current invoice state
+            } else if (newSituacao === 'F') {
+                const { totalToPay } = calculateInvoiceTotals(clientId);
                 const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
                 const valorEmFalta = totalToPay - totalPaid;
-                 invoice.prevReading = invoice.currentReading;
-                invoice.currentReading = 0; // Reset current reading for closed account
-                invoice.customAmount = valorEmFalta; // Final amount to pay for closure, no additional 375
+                
+                invoice.customAmount = valorEmFalta;
             } else if (originalSituacao === 'F' && newSituacao !== 'F') {
-                invoice.customAmount = null; // Remove custom amount if changing from Fechada
+                invoice.customAmount = null;
             }
             saveData();
             renderAllTables();
@@ -2167,50 +2200,45 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.blur();
         }
     }
-
+    
     function updateStateFromCell(cell, value) {
         const clientId = cell.dataset.clientId;
         const field = cell.dataset.field;
         const client = state.clients.find(c => c.id == clientId);
         if (!client || !field) {
-            renderAllTables(); // Re-render to revert invalid changes
+            renderAllTables();
             return;
         }
 
         const parsedValue = parseFloat(value.replace(',', '.'));
         if (isNaN(parsedValue)) {
             alert("Por favor, insira um valor numérico válido.");
-            renderAllTables(); // Revert
+            renderAllTables();
             return;
         }
         
-        // Prevent editing readings for 'F' or 'N' clients
         if ((client.situacao === 'F' || client.situacao === 'N') && (field === 'prevReading' || field === 'currentReading')) {
             alert(`Não é possível alterar as leituras de um cliente com a situação "${client.situacao}".`);
-            renderAllTables(); // Revert
+            renderAllTables(); // Reverte a alteração visual
             return;
         }
 
-        // START: Validation for currentReading not less than prevReading
         if (field === 'currentReading') {
             const currentInvoice = state.invoices[clientId];
             const prevReading = currentInvoice ? (currentInvoice.prevReading || 0) : 0;
             if (parsedValue < prevReading) {
                 alert("A leitura atual não pode ser menor que a leitura anterior.");
-                renderInvoicesTable(); // Revert to previous value
+                renderInvoicesTable();
                 return; 
             }
         }
-        // END: Validation for currentReading not less than prevReading
 
         if (['prevReading', 'currentReading', 'debt', 'customAmount'].includes(field)) {
              if (field === 'customAmount') {
                  const { totalToPay } = calculateInvoiceTotals(clientId);
-                 // Only update customAmount if it's significantly different from auto-calculated totalToPay
                  state.invoices[clientId].customAmount = (Math.abs(parsedValue - totalToPay) > 0.01) ? parsedValue : null;
              } else {
                 state.invoices[clientId][field] = parsedValue;
-                 // If reading or debt is changed, customAmount should be reset
                  if(field === 'currentReading' || field === 'debt') {
                     state.invoices[clientId].customAmount = null;
                  }
@@ -2398,7 +2426,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         requestVerificationCode(() => {
-            const newContractId = state.clients.length > 0 ? Math.max(...state.clients.map(c => c.id)) + 1000 : 1000; // Unique ID for contracts
+            // --- INÍCIO DA CORREÇÃO ---
+            
+            // 1. Obter todos os IDs de contratos existentes e convertê-los para números.
+            const existingContractIds = Object.keys(state.contracts).map(Number);
+
+            // 2. Encontrar o ID mais alto. Se não houver contratos, começar com 1000.
+            const maxId = existingContractIds.length > 0 ? Math.max(...existingContractIds) : 1000;
+
+            // 3. O novo ID será o ID mais alto + 1.
+            const newContractId = maxId + 1;
+            
+            // --- FIM DA CORREÇÃO ---
+
             state.contracts[newContractId] = {
                 id: newContractId,
                 clientId: clientId,
@@ -2414,6 +2454,7 @@ document.addEventListener('DOMContentLoaded', () => {
             contractModal.classList.add('hidden');
         });
     });
+
 
     contractsTableBody.addEventListener('click', (e) => {
         const target = e.target;
