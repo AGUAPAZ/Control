@@ -845,7 +845,7 @@
             <button data-view="payments-view">Ver Pagamentos</button>
             <button data-action="add-contract">Adicionar Contrato</button>
             <button data-view="contracts-view">Ver Contratos</button>
-            <button data-view="receipts-view">Gerar Recibos</button>
+            <button data-view="receipts-view">Gerar Facturas</button>
         </section>
     </aside>
 
@@ -945,7 +945,7 @@
 
             <section id="receipts-view" class="hidden">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2>Recibos Gerados</h2>
+                    <h2>Facturas Geradas</h2>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <label for="client-start-id">Início ID:</label>
                         <input type="number" id="client-start-id" placeholder="Ex: 1" style="width: 80px;">
@@ -1352,11 +1352,12 @@ document.addEventListener('DOMContentLoaded', () => {
         receiptsContainer.innerHTML = '';
         const generatedInvoiceNumbers = new Set();
 
-        const now = new Date();
-        const lastMonthDate = new Date();
-        lastMonthDate.setDate(0);
-        const monthName = lastMonthDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
-        const year = lastMonthDate.getFullYear();
+        // --- ALTERAÇÃO AQUI ---
+        // Agora usa a data atual para o mês e ano na página "Gerar Facturas"
+        const currentDate = new Date();
+        const monthName = currentDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
+        const year = currentDate.getFullYear();
+        // --- FIM DA ALTERAÇÃO ---
 
         // FILTRAR APENAS CLIENTES COM SITUAÇÃO 'A' PRIMEIRO
         let clientsToPrint = state.clients.filter(client => client.situacao === 'A');
@@ -1367,10 +1368,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (clientsToPrint.length === 0 && (startId !== null || endId !== null)) {
-            receiptsContainer.innerHTML = '<p>Nenhum recibo de cliente ATIVO encontrado para o intervalo de IDs especificado.</p>';
+            receiptsContainer.innerHTML = '<p>Nenhuma factura de cliente ATIVO encontrada para o intervalo de IDs especificado.</p>';
             return;
         } else if (clientsToPrint.length === 0) {
-            receiptsContainer.innerHTML = '<p>Nenhum cliente ativo para gerar recibos.</p>';
+            receiptsContainer.innerHTML = '<p>Nenhum cliente ativo para gerar facturas.</p>';
             return;
         }
 
