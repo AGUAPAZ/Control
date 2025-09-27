@@ -132,6 +132,7 @@
             transform: translateX(-250px); /* Adjusted width */
             transition: transform 0.3s ease-in-out;
             z-index: 1001;
+            overflow-y: auto; /* Permite scroll se o menu for grande */
         }
         aside.open {
             transform: translateX(0);
@@ -864,6 +865,11 @@
             <button data-action="add-contract">Adicionar Contrato</button>
             <button data-view="contracts-view">Ver Contratos</button>
             <button data-view="receipts-view">Gerar Facturas</button>
+            
+            <hr style="margin: 20px 0;">
+            <button data-action="export-data" class="btn-success">Exportar Dados (Backup)</button>
+            <button data-action="import-data" class="btn-warning">Importar Dados (Restaurar)</button>
+            <input type="file" id="import-file-input" class="hidden" accept=".json">
         </section>
     </aside>
 
@@ -1062,21 +1068,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const receiptsContainer = document.getElementById('receipts-container');
     const newMonthButton = document.getElementById('new-month-button');
-    
-    // --- INÍCIO ALTERAÇÃO: Selector para o novo botão ---
     const editReceiptOrderButton = document.getElementById('edit-receipt-order-button');
-    // --- FIM ALTERAÇÃO ---
-
-    // NOVOS ELEMENTOS PARA FILTRAGEM DE RECIBOS
     const clientStartIdInput = document.getElementById('client-start-id');
     const clientEndIdInput = document.getElementById('client-end-id');
     const generateReceiptsByRangeButton = document.getElementById('generate-receipts-by-range-button');
+    
+    // NOVO: Seletor para o input de importação de ficheiro
+    const importFileInput = document.getElementById('import-file-input');
 
     // Estado da aplicação
     let state = { clients: [], invoices: {}, payments: {}, contracts: {}, receiptOrder: [] };
     const FIXED_VERIFICATION_CODE = '123456a';
     let originalCellValue = null;
-    const generatedBinarySignatures = new Set(); // To store unique binary signatures
+    const generatedBinarySignatures = new Set();
 
     // --- Lógica de segurança ---
     function requestVerificationCode(onSuccess, onFail = () => {}) {
@@ -1095,6 +1099,86 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveData() {
         localStorage.setItem('waterManagementData', JSON.stringify(state));
     }
+    
+    // NOVO: Função para exportar os dados para um ficheiro JSON
+    function exportDataToFile() {
+        try {
+            // Converte o estado atual para uma string JSON formatada
+            const dataStr = JSON.stringify(state, null, 2);
+            // Cria um Blob (Binary Large Object) que representa os dados
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            // Cria uma URL temporária para o Blob
+            const url = URL.createObjectURL(blob);
+            
+            // Cria um elemento de link <a> invisível
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            
+            // Define o nome do ficheiro que será descarregado
+            const today = new Date().toISOString().slice(0, 10); // Formato AAAA-MM-DD
+            a.download = `backup_gestao_aguas_${today}.json`;
+            
+            document.body.appendChild(a);
+            // Simula um clique no link para iniciar o download
+            a.click();
+            
+            // Limpa a URL e remove o elemento após o download
+            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            alert('Backup dos dados exportado com sucesso!');
+
+        } catch (error) {
+            console.error('Erro ao exportar dados:', error);
+            alert('Ocorreu um erro ao tentar exportar os dados.');
+        }
+    }
+
+    // NOVO: Função para importar dados a partir de um ficheiro JSON
+    function importDataFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            return; // Nenhum ficheiro selecionado
+        }
+
+        if (!confirm('Tem a certeza que deseja importar este ficheiro? Esta ação irá substituir TODOS os dados atuais e não pode ser desfeita.')) {
+            event.target.value = null; // Limpa o input para permitir selecionar o mesmo ficheiro novamente
+            return;
+        }
+
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            try {
+                const content = e.target.result;
+                const importedState = JSON.parse(content);
+
+                // Validação básica para garantir que o ficheiro tem a estrutura esperada
+                if (importedState.clients && importedState.invoices && importedState.payments && importedState.contracts) {
+                    state = importedState;
+                    saveData(); // Guarda o novo estado no localStorage
+                    renderAllTables(); // Re-renderiza todas as tabelas com os novos dados
+                    alert('Dados importados com sucesso!');
+                } else {
+                    throw new Error('Estrutura de dados inválida no ficheiro.');
+                }
+            } catch (error) {
+                console.error('Erro ao importar o ficheiro:', error);
+                alert('Erro: O ficheiro selecionado não é um ficheiro de backup válido ou está corrompido.');
+            } finally {
+                event.target.value = null; // Limpa o input
+            }
+        };
+
+        reader.onerror = function() {
+            alert('Ocorreu um erro ao ler o ficheiro.');
+            event.target.value = null; // Limpa o input
+        };
+
+        reader.readAsText(file);
+    }
+
 
     function loadData() {
         const data = localStorage.getItem('waterManagementData');
@@ -1125,11 +1209,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             
-            // --- INÍCIO ALTERAÇÃO: Inicializar a ordem da lista se não existir ---
             if (!state.receiptOrder || !Array.isArray(state.receiptOrder) || state.receiptOrder.length === 0) {
                  state.receiptOrder = [10, 16, 113, 42, 21, 23, 15, 72, 76, 65, 30, 55, 52, 94, 83, 116, 51, 48, 100, 88, 118, 114, 33, 121, 7, 13, 102, 95, 111, 133, 99, 108, 126, 124, 110, 130, 67, 71, 29, 50, 112, 97, 117, 120, 92, 107, 77, 63, 6, 2, 68, 1, 73, 17, 25, 9, 132, 20, 69, 11, 134, 98, 104, 62, 82, 128, 37, 93, 57, 119, 18, 24, 125, 90, 129, 8, 3, 26, 58, 61, 80, 137, 44];
             }
-            // --- FIM ALTERAÇÃO ---
 
         } else {
             state = {
@@ -1149,9 +1231,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     3: { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } }
                 },
                 contracts: {}, // New empty contracts object
-                // --- INÍCIO ALTERAÇÃO: Adicionar a lista ao estado inicial ---
                 receiptOrder: [10, 16, 113, 42, 21, 23, 15, 72, 76, 65, 30, 55, 52, 94, 83, 116, 51, 48, 100, 88, 118, 114, 33, 121, 7, 13, 102, 95, 111, 133, 99, 108, 126, 124, 110, 130, 67, 71, 29, 50, 112, 97, 117, 120, 92, 107, 77, 63, 6, 2, 68, 1, 73, 17, 25, 9, 132, 20, 69, 11, 134, 98, 104, 62, 82, 128, 37, 93, 57, 119, 18, 24, 125, 90, 129, 8, 3, 26, 58, 61, 80, 137, 44]
-                // --- FIM ALTERAÇÃO ---
             };
         }
     }
@@ -1386,20 +1466,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthName = currentDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
         const year = currentDate.getFullYear();
         
-        // --- INÍCIO ALTERAÇÃO: A lógica de ordenação agora usa a lista do estado da aplicação ---
-        
-        // 1. Obter a ordem personalizada a partir do estado
         const customOrder = state.receiptOrder || [];
         const customOrderSet = new Set(customOrder);
 
-        // 2. Filtrar apenas clientes ativos
         const allActiveClients = state.clients.filter(client => client.situacao === 'A');
         
-        // 3. Separar clientes em prioritários e outros
         const prioritizedClients = [];
         const otherClients = [];
 
-        // Adicionar clientes à lista prioritária, mantendo a ordem personalizada
         customOrder.forEach(id => {
             const client = allActiveClients.find(c => c.id === id);
             if (client) {
@@ -1407,27 +1481,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Adicionar os restantes clientes ativos à outra lista
         allActiveClients.forEach(client => {
             if (!customOrderSet.has(client.id)) {
                 otherClients.push(client);
             }
         });
         
-        // Ordenar os outros clientes por ID para uma ordem consistente
         otherClients.sort((a, b) => a.id - b.id);
 
-        // 4. Combinar as listas para ter a ordem final
         let sortedClients = [...prioritizedClients, ...otherClients];
 
-        // 5. Aplicar o filtro de intervalo de ID, se fornecido
         let clientsToPrint = sortedClients;
         if (startId !== null && endId !== null) {
             clientsToPrint = sortedClients.filter(client => client.id >= startId && client.id <= endId);
         }
         
-        // --- FIM ALTERAÇÃO ---
-
         if (clientsToPrint.length === 0 && (startId !== null || endId !== null)) {
             receiptsContainer.innerHTML = '<p>Nenhuma factura de cliente ATIVO encontrada para o intervalo de IDs especificado.</p>';
             return;
@@ -1516,7 +1584,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to convert number to words in Portuguese (simplified for common use)
     function numberToWords(num) {
         const units = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
         const teens = ['dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezasseis', 'dezassete', 'dezoito', 'dezanove'];
@@ -1563,7 +1630,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let fullResult = result.trim();
         
-        // Add "Metical" or "Meticais" based on the integer part
         if (integerPart === 1 && !fullResult.includes("milhão") && !fullResult.includes("mil milhões")) {
             fullResult += ' Metical';
         } else if (integerPart > 0) {
@@ -1579,19 +1645,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return fullResult.charAt(0).toUpperCase() + fullResult.slice(1);
     }
 
-    // Function to generate a unique 25-digit binary string
     function generateUniqueBinarySignature() {
         let binaryString;
         do {
             binaryString = '';
-            for (let i = 0; i < 25; i++) { // Changed to 25 digits
+            for (let i = 0; i < 25; i++) {
                 binaryString += Math.round(Math.random());
             }
         } while (generatedBinarySignatures.has(binaryString));
         generatedBinarySignatures.add(binaryString);
         return binaryString;
     }
-
 
     function generateReceipt(clientId) {
         const client = state.clients.find(c => c.id == clientId);
@@ -1686,7 +1750,6 @@ document.addEventListener('DOMContentLoaded', () => {
         openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
     }
 
-    // NOVA FUNÇÃO PARA GERAR RECIBO DE CONTRATO
     function generateContractReceipt(contractId) {
         const contract = state.contracts[contractId];
         if (!contract) {
@@ -1783,8 +1846,6 @@ document.addEventListener('DOMContentLoaded', () => {
         openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
     }
 
-
-    // FUNÇÃO AUXILIAR PARA ABRIR JANELA DE IMPRESSÃO (Evita repetição de código)
     function openReceiptInNewWindow(htmlContent, title) {
         const safeTitle = title || 'Recibo de Pagamento';
         const newWindow = window.open('', '_blank', 'width=800,height=600');
@@ -2071,6 +2132,12 @@ document.addEventListener('DOMContentLoaded', () => {
             clientModal.classList.remove('hidden');
         } else if (action === 'add-contract') {
             openContractModal();
+        } 
+        // NOVO: Ações de exportar e importar
+        else if (action === 'export-data') {
+            exportDataToFile();
+        } else if (action === 'import-data') {
+            importFileInput.click(); // Abre o seletor de ficheiros
         }
         
         if (view) {
@@ -2495,13 +2562,13 @@ document.addEventListener('DOMContentLoaded', () => {
     invoicesTableBody.addEventListener('keydown', handleCellEdit);
     paymentsTableBody.addEventListener('click', handlePaymentClick);
     contractsTableBody.addEventListener('click', handleContractPaymentClick);
-
-    // Search input listeners
     clientSearchClients.addEventListener('input', renderClientsTable);
     clientSearchPayments.addEventListener('input', renderPaymentsTable);
     invoiceSearch.addEventListener('input', renderInvoicesTable);
 
-    // NOVO EVENT LISTENER PARA GERAR RECIBOS POR INTERVALO DE ID
+    // NOVO: Listener para o input de ficheiro de importação
+    importFileInput.addEventListener('change', importDataFromFile);
+
     generateReceiptsByRangeButton.addEventListener('click', () => {
         const startId = parseInt(clientStartIdInput.value);
         const endId = parseInt(clientEndIdInput.value);
@@ -2522,33 +2589,28 @@ document.addEventListener('DOMContentLoaded', () => {
         renderReceipts(startId, endId);
     });
     
-    // --- INÍCIO ALTERAÇÃO: Event Listener para o botão de editar a sequência ---
     editReceiptOrderButton.addEventListener('click', () => {
         const currentOrderStr = state.receiptOrder.join(', ');
         const newOrderStr = prompt("Edite a sequência de IDs dos clientes, separados por vírgula:", currentOrderStr);
 
         if (newOrderStr === null) {
-            // O usuário cancelou
             return;
         }
 
-        // Limpa e valida a entrada do usuário
         const newOrderArray = newOrderStr
-            .split(',') // Divide a string em um array
-            .map(s => s.trim()) // Remove espaços em branco
-            .filter(s => s !== '') // Remove entradas vazias (ex: 1,,2)
-            .map(s => parseInt(s, 10)) // Converte para números
-            .filter(num => !isNaN(num)); // Remove valores que não são números
+            .split(',')
+            .map(s => s.trim())
+            .filter(s => s !== '')
+            .map(s => parseInt(s, 10))
+            .filter(num => !isNaN(num));
 
         requestVerificationCode(() => {
             state.receiptOrder = newOrderArray;
             saveData();
-            renderReceipts(); // Re-renderiza a lista com a nova ordem
+            renderReceipts(); 
             alert('Ordem da lista atualizada com sucesso!');
         });
     });
-    // --- FIM ALTERAÇÃO ---
-
 
     // --- INICIALIZAÇÃO ---
     loadData();
