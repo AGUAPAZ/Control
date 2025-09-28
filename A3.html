@@ -132,6 +132,7 @@
             transform: translateX(-250px); /* Adjusted width */
             transition: transform 0.3s ease-in-out;
             z-index: 1001;
+            overflow-y: auto; /* Permite scroll se o menu for grande */
         }
         aside.open {
             transform: translateX(0);
@@ -701,6 +702,24 @@
                 padding: 1rem;
                 margin-top: 1rem;
             }
+            
+            /* --- INÍCIO ALTERAÇÃO --- */
+            /* Ajustar o cabeçalho da vista de recibos para empilhar em telas pequenas */
+             #receipts-view .receipts-header-controls {
+                flex-direction: column;
+                align-items: stretch; /* Fazer os itens ocuparem a largura total */
+                gap: 15px; /* Adicionar espaço entre os grupos de controlo */
+            }
+
+            #receipts-view .receipts-header-controls .id-range-filter {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            #receipts-view .receipts-header-controls .id-range-filter input {
+                width: 100%; /* Ocupar toda a largura */
+            }
+            /* --- FIM ALTERAÇÃO --- */
 
             /* Search input on top of tables */
             #clients-view div, #payments-view div, #invoices-view div {
@@ -846,6 +865,11 @@
             <button data-action="add-contract">Adicionar Contrato</button>
             <button data-view="contracts-view">Ver Contratos</button>
             <button data-view="receipts-view">Gerar Facturas</button>
+            
+            <hr style="margin: 20px 0;">
+            <button data-action="export-data" class="btn-success">Exportar Dados (Backup)</button>
+            <button data-action="import-data" class="btn-warning">Importar Dados (Restaurar)</button>
+            <input type="file" id="import-file-input" class="hidden" accept=".json">
         </section>
     </aside>
 
@@ -944,19 +968,19 @@
             </section>
 
             <section id="receipts-view" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div class="receipts-header-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
                     <h2>Facturas Geradas</h2>
-                    <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="id-range-filter" style="display: flex; gap: 10px; align-items: center;">
                         <label for="client-start-id">Início ID:</label>
                         <input type="number" id="client-start-id" placeholder="Ex: 1" style="width: 80px;">
                         <label for="client-end-id">Fim ID:</label>
                         <input type="number" id="client-end-id" placeholder="Ex: 10" style="width: 80px;">
                         <button id="generate-receipts-by-range-button" class="btn-primary">Gerar por ID</button>
                     </div>
-                    <button id="print-receipts-button" class="btn-primary">Imprimir (Não Usar)</button>
+                    <button id="edit-receipt-order-button" class="btn-secondary">Editar Sequência</button>
                 </div>
                 <div id="receipts-container">
-                    </div>
+                </div>
             </section>
         </main>
     </div>
@@ -1044,18 +1068,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const receiptsContainer = document.getElementById('receipts-container');
     const newMonthButton = document.getElementById('new-month-button');
-    const printReceiptsButton = document.getElementById('print-receipts-button');
-
-    // NOVOS ELEMENTOS PARA FILTRAGEM DE RECIBOS
+    const editReceiptOrderButton = document.getElementById('edit-receipt-order-button');
     const clientStartIdInput = document.getElementById('client-start-id');
     const clientEndIdInput = document.getElementById('client-end-id');
     const generateReceiptsByRangeButton = document.getElementById('generate-receipts-by-range-button');
+    
+    // NOVO: Seletor para o input de importação de ficheiro
+    const importFileInput = document.getElementById('import-file-input');
 
     // Estado da aplicação
-    let state = { clients: [], invoices: {}, payments: {}, contracts: {} };
+    let state = { clients: [], invoices: {}, payments: {}, contracts: {}, receiptOrder: [] };
     const FIXED_VERIFICATION_CODE = '123456a';
     let originalCellValue = null;
-    const generatedBinarySignatures = new Set(); // To store unique binary signatures
+    const generatedBinarySignatures = new Set();
 
     // --- Lógica de segurança ---
     function requestVerificationCode(onSuccess, onFail = () => {}) {
@@ -1074,6 +1099,86 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveData() {
         localStorage.setItem('waterManagementData', JSON.stringify(state));
     }
+    
+    // NOVO: Função para exportar os dados para um ficheiro JSON
+    function exportDataToFile() {
+        try {
+            // Converte o estado atual para uma string JSON formatada
+            const dataStr = JSON.stringify(state, null, 2);
+            // Cria um Blob (Binary Large Object) que representa os dados
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            // Cria uma URL temporária para o Blob
+            const url = URL.createObjectURL(blob);
+            
+            // Cria um elemento de link <a> invisível
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            
+            // Define o nome do ficheiro que será descarregado
+            const today = new Date().toISOString().slice(0, 10); // Formato AAAA-MM-DD
+            a.download = `backup_gestao_aguas_${today}.json`;
+            
+            document.body.appendChild(a);
+            // Simula um clique no link para iniciar o download
+            a.click();
+            
+            // Limpa a URL e remove o elemento após o download
+            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            alert('Backup dos dados exportado com sucesso!');
+
+        } catch (error) {
+            console.error('Erro ao exportar dados:', error);
+            alert('Ocorreu um erro ao tentar exportar os dados.');
+        }
+    }
+
+    // NOVO: Função para importar dados a partir de um ficheiro JSON
+    function importDataFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            return; // Nenhum ficheiro selecionado
+        }
+
+        if (!confirm('Tem a certeza que deseja importar este ficheiro? Esta ação irá substituir TODOS os dados atuais e não pode ser desfeita.')) {
+            event.target.value = null; // Limpa o input para permitir selecionar o mesmo ficheiro novamente
+            return;
+        }
+
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            try {
+                const content = e.target.result;
+                const importedState = JSON.parse(content);
+
+                // Validação básica para garantir que o ficheiro tem a estrutura esperada
+                if (importedState.clients && importedState.invoices && importedState.payments && importedState.contracts) {
+                    state = importedState;
+                    saveData(); // Guarda o novo estado no localStorage
+                    renderAllTables(); // Re-renderiza todas as tabelas com os novos dados
+                    alert('Dados importados com sucesso!');
+                } else {
+                    throw new Error('Estrutura de dados inválida no ficheiro.');
+                }
+            } catch (error) {
+                console.error('Erro ao importar o ficheiro:', error);
+                alert('Erro: O ficheiro selecionado não é um ficheiro de backup válido ou está corrompido.');
+            } finally {
+                event.target.value = null; // Limpa o input
+            }
+        };
+
+        reader.onerror = function() {
+            alert('Ocorreu um erro ao ler o ficheiro.');
+            event.target.value = null; // Limpa o input
+        };
+
+        reader.readAsText(file);
+    }
+
 
     function loadData() {
         const data = localStorage.getItem('waterManagementData');
@@ -1103,6 +1208,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }
+            
+            if (!state.receiptOrder || !Array.isArray(state.receiptOrder) || state.receiptOrder.length === 0) {
+                 state.receiptOrder = [10, 16, 113, 42, 21, 23, 15, 72, 76, 65, 30, 55, 52, 94, 83, 116, 51, 48, 100, 88, 118, 114, 33, 121, 7, 13, 102, 95, 111, 133, 99, 108, 126, 124, 110, 130, 67, 71, 29, 50, 112, 97, 117, 120, 92, 107, 77, 63, 6, 2, 68, 1, 73, 17, 25, 9, 132, 20, 69, 11, 134, 98, 104, 62, 82, 128, 37, 93, 57, 119, 18, 24, 125, 90, 129, 8, 3, 26, 58, 61, 80, 137, 44];
+            }
 
         } else {
             state = {
@@ -1121,7 +1230,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     2: { p1: { amount: 600, date: '2025-05-26T11:00:00.000Z' }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } },
                     3: { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } }
                 },
-                contracts: {} // New empty contracts object
+                contracts: {}, // New empty contracts object
+                receiptOrder: [10, 16, 113, 42, 21, 23, 15, 72, 76, 65, 30, 55, 52, 94, 83, 116, 51, 48, 100, 88, 118, 114, 33, 121, 7, 13, 102, 95, 111, 133, 99, 108, 126, 124, 110, 130, 67, 71, 29, 50, 112, 97, 117, 120, 92, 107, 77, 63, 6, 2, 68, 1, 73, 17, 25, 9, 132, 20, 69, 11, 134, 98, 104, 62, 82, 128, 37, 93, 57, 119, 18, 24, 125, 90, 129, 8, 3, 26, 58, 61, 80, 137, 44]
             };
         }
     }
@@ -1352,21 +1462,40 @@ document.addEventListener('DOMContentLoaded', () => {
         receiptsContainer.innerHTML = '';
         const generatedInvoiceNumbers = new Set();
 
-        // --- ALTERAÇÃO AQUI ---
-        // Agora usa a data atual para o mês e ano na página "Gerar Facturas"
         const currentDate = new Date();
         const monthName = currentDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
         const year = currentDate.getFullYear();
-        // --- FIM DA ALTERAÇÃO ---
+        
+        const customOrder = state.receiptOrder || [];
+        const customOrderSet = new Set(customOrder);
 
-        // FILTRAR APENAS CLIENTES COM SITUAÇÃO 'A' PRIMEIRO
-        let clientsToPrint = state.clients.filter(client => client.situacao === 'A');
+        const allActiveClients = state.clients.filter(client => client.situacao === 'A');
+        
+        const prioritizedClients = [];
+        const otherClients = [];
 
-        // Em seguida, aplique o filtro por ID, se fornecido
+        customOrder.forEach(id => {
+            const client = allActiveClients.find(c => c.id === id);
+            if (client) {
+                prioritizedClients.push(client);
+            }
+        });
+        
+        allActiveClients.forEach(client => {
+            if (!customOrderSet.has(client.id)) {
+                otherClients.push(client);
+            }
+        });
+        
+        otherClients.sort((a, b) => a.id - b.id);
+
+        let sortedClients = [...prioritizedClients, ...otherClients];
+
+        let clientsToPrint = sortedClients;
         if (startId !== null && endId !== null) {
-            clientsToPrint = clientsToPrint.filter(client => client.id >= startId && client.id <= endId);
+            clientsToPrint = sortedClients.filter(client => client.id >= startId && client.id <= endId);
         }
-
+        
         if (clientsToPrint.length === 0 && (startId !== null || endId !== null)) {
             receiptsContainer.innerHTML = '<p>Nenhuma factura de cliente ATIVO encontrada para o intervalo de IDs especificado.</p>';
             return;
@@ -1388,11 +1517,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
             
             const valorEmFalta = totalToPay - totalPaid;
-            const debtForReceipt = valorEmFalta; // Manter como número para comparação
-            const debtClassForReceipt = debtForReceipt > 1124 ? 'text-danger' : ''; // MODIFICAÇÃO
+            const debtForReceipt = valorEmFalta;
+            const debtClassForReceipt = debtForReceipt > 1124 ? 'text-danger' : '';
             
             const prevReadingForReceipt = invoice.prevReading || 0;
-            const counterNumber = String(client.id).padStart(3, '0'); // Usar o ID do cliente como número do contador
+            const counterNumber = String(client.id).padStart(3, '0');
 
             const receiptHTML = `
             <div class="receipt">
@@ -1455,7 +1584,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to convert number to words in Portuguese (simplified for common use)
     function numberToWords(num) {
         const units = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
         const teens = ['dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezasseis', 'dezassete', 'dezoito', 'dezanove'];
@@ -1502,7 +1630,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let fullResult = result.trim();
         
-        // Add "Metical" or "Meticais" based on the integer part
         if (integerPart === 1 && !fullResult.includes("milhão") && !fullResult.includes("mil milhões")) {
             fullResult += ' Metical';
         } else if (integerPart > 0) {
@@ -1518,19 +1645,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return fullResult.charAt(0).toUpperCase() + fullResult.slice(1);
     }
 
-    // Function to generate a unique 25-digit binary string
     function generateUniqueBinarySignature() {
         let binaryString;
         do {
             binaryString = '';
-            for (let i = 0; i < 25; i++) { // Changed to 25 digits
+            for (let i = 0; i < 25; i++) {
                 binaryString += Math.round(Math.random());
             }
         } while (generatedBinarySignatures.has(binaryString));
         generatedBinarySignatures.add(binaryString);
         return binaryString;
     }
-
 
     function generateReceipt(clientId) {
         const client = state.clients.find(c => c.id == clientId);
@@ -1562,9 +1687,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const receiptMonthText = receiptDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
         const fullYear = String(receiptDate.getFullYear());
         
-        // Lógica para obter o mês anterior (mês da fatura)
         const invoiceDate = new Date();
-        invoiceDate.setDate(1); // Evita problemas com meses de durações diferentes
+        invoiceDate.setDate(1);
         invoiceDate.setMonth(invoiceDate.getMonth() - 1);
         const invoiceMonthName = invoiceDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
 
@@ -1626,7 +1750,6 @@ document.addEventListener('DOMContentLoaded', () => {
         openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
     }
 
-    // NOVA FUNÇÃO PARA GERAR RECIBO DE CONTRATO
     function generateContractReceipt(contractId) {
         const contract = state.contracts[contractId];
         if (!contract) {
@@ -1723,10 +1846,8 @@ document.addEventListener('DOMContentLoaded', () => {
         openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
     }
 
-
-    // FUNÇÃO AUXILIAR PARA ABRIR JANELA DE IMPRESSÃO (Evita repetição de código)
     function openReceiptInNewWindow(htmlContent, title) {
-        const safeTitle = title || 'Recibo de Pagamento'; // Usa um título padrão se nenhum for fornecido
+        const safeTitle = title || 'Recibo de Pagamento';
         const newWindow = window.open('', '_blank', 'width=800,height=600');
         newWindow.document.open();
         newWindow.document.write(`
@@ -1749,56 +1870,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 overflow: hidden; /* Hide scrollbars */
               }
               .recibo-popup {
-                  width: 21cm !important; /* Largura total da folha A4 */
-                  height: 11.8cm !important; /* MODIFICADO: Altura ajustada para dois recibos na A4 (12.8cm - 8%) */
-                  margin: 0.8cm 0 0.4cm !important; /* Margem superior, sem margens laterais, e inferior reduzida */
+                  width: 21cm !important;
+                  height: 11.8cm !important;
+                  margin: 0.8cm 0 0.4cm !important;
                   border: 1px solid black !important;
                   box-sizing: border-box !important;
                   font-family: monospace !important;
                   position: relative !important;
-                  page-break-after: auto !important; /* CRÍTICO: Não forçar quebras de página após CADA recibo na nova janela */
-                  page-break-inside: avoid; /* Prevent breaking a receipt in half */
+                  page-break-after: auto !important;
+                  page-break-inside: avoid;
               }
               
-               /* Ajustar os tamanhos de fonte para o recibo ficar mais compacto na impressão */
               .recibo-popup .cabecalho .agua-paz {
-                  font-size: 15pt; /* MODIFICADO */
+                  font-size: 15pt;
               }
               .recibo-popup .cabecalho .recibo-num {
-                  font-size: 11pt; /* MODIFICADO */
+                  font-size: 11pt;
               }
               .recibo-popup .linha {
-                  font-size: 9pt; /* MODIFICADO */
+                  font-size: 9pt;
                   line-height: 1.2;
               }
               .recibo-popup .checklist label {
-                  font-size: 8pt; /* MODIFICADO */
+                  font-size: 8pt;
               }
               .recibo-popup .assinatura-maquina {
-                  font-size: 10pt; /* MODIFICADO */
+                  font-size: 10pt;
               }
                .carimbo-overlay {
-                    top: 21.7px !important; /* MODIFICADO: Ajuste a posição vertical do carimbo para impressão -35px + 1.5cm (56.7px) */
-                    margin-left: 187.3px !important; /* ALTERADO: Original 55px + 132.3px (3.5cm) para a direita */
-                    width: 383px !important; /* ALTERADO: Original 450px - 15% */
+                    top: 21.7px !important;
+                    margin-left: 187.3px !important;
+                    width: 383px !important;
                 }
-            /* Estilo da nova linha HR para impressão */
             .receipt-divider-print {
                 border: none;
-                border-top: 1px dashed #999; /* Linha tracejada suave */
-                margin: 0.4cm auto !important; /* Margem para separar os recibos */
-                width: 80% !important; /* Largura da linha divisória */
-                display: block !important; /* Garante que a linha é visível na impressão */
+                border-top: 1px dashed #999;
+                margin: 0.4cm auto !important;
+                width: 80% !important;
+                display: block !important;
             }
-
-            /* Outros ajustes finos para tabelas dentro do recibo, se aplicável */
             .receipt-body table {
                 font-size: 8pt !important;
-                margin-top: 0.3cm !important; /* Reduzir a margem superior da tabela */
+                margin-top: 0.3cm !important;
             }
             .receipt-body table th,
             .receipt-body table td {
-                padding: 0.15cm !important; /* Reduzir padding das células da tabela */
+                padding: 0.15cm !important;
                 border: 1px solid #333 !important;
             }
             .receipt-footer {
@@ -1809,38 +1926,35 @@ document.addEventListener('DOMContentLoaded', () => {
             .receipt-footer p {
                 margin-bottom: 0 !important;
             }
-            /* Explicitly set for print to ensure row layout */
             .recibo-popup .assinatura-checklist-container {
-                flex-direction: row !important; /* Force side-by-side for print */
+                flex-direction: row !important;
                 justify-content: space-between !important;
                 align-items: flex-start !important;
             }
             .recibo-popup .checklist,
             .recibo-popup .assinatura {
-                width: 48% !important; /* Ensure they share space */
+                width: 48% !important;
                 margin-bottom: 0 !important;
             }
             .recibo-popup .assinatura {
-                text-align: right !important; /* Align signature text to the right for print */
+                text-align: right !important;
             }
 
-            /* Novo estilo para o topo da seção de pagamento/assinatura no recibo de impressão */
             .recibo-popup .receipt-top-info {
                 display: flex !important;
                 justify-content: space-between !important;
-                align-items: flex-end !important; /* Alinhar texto com a parte de baixo */
+                align-items: flex-end !important;
                 font-weight: bold !important;
-                font-size: 9pt !important; /* MODIFICADO */
-                margin-bottom: 5px !important; /* Espaço entre o cabeçalho e os checkboxes */
+                font-size: 9pt !important;
+                margin-bottom: 5px !important;
             }
 
             .recibo-popup .receipt-top-info .assinatura-header-print {
-                margin-top: 0 !important; /* Remover margem extra no topo */
-                margin-bottom: 0 !important; /* Remover margem extra no rodapé */
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
             }
         }
 
-            /* Estilos de tela para a janela de recibo */
             .recibo-popup {
               width: 97%;
               height: 45%; 
@@ -1878,10 +1992,9 @@ document.addEventListener('DOMContentLoaded', () => {
               text-align: right;
               position: relative;
             }
-            /* Estilo para o texto "Assinatura e carimbo" */
             .recibo-popup .assinatura .assinatura-header {
-                font-weight: bold; /* Deixar o texto em negrito */
-                font-size: 1rem; /* Pode ajustar o tamanho da fonte */
+                font-weight: bold;
+                font-size: 1rem;
             }
 
 
@@ -1894,16 +2007,15 @@ document.addEventListener('DOMContentLoaded', () => {
               margin-top: 10px;
               text-align: left;
             }
-            /* Estilo para o texto "Forma de pagamento" */
             .recibo-popup .checklist .payment-form-header {
-                font-weight: bold; /* Deixar o texto em negrito */
-                font-size: 1rem; /* Pode ajustar o tamanho da fonte */
+                font-weight: bold;
+                font-size: 1rem;
             }
 
 
             .recibo-popup .assinatura-checklist-container {
               display: flex;
-              flex-direction: column; /* Stack on small screens for the pop-up too */
+              flex-direction: column;
               justify-content: space-between;
               align-items: flex-start;
               margin-top: 30px;
@@ -1911,20 +2023,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             .recibo-popup .checklist,
             .recibo-popup .assinatura {
-              width: 100%; /* Full width on small screens for pop-up */
+              width: 100%;
               margin-bottom: 20px;
             }
             .recibo-popup .assinatura {
-                text-align: left; /* Align left when stacked */
+                text-align: left;
             }
 
-            /* Novo estilo para o topo da seção de pagamento/assinatura no recibo */
             .recibo-popup .receipt-top-info {
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-end; /* Alinhar o texto com a parte de baixo */
-                margin-bottom: 10px; /* Espaço entre o cabeçalho e os checkboxes */
-                font-weight: bold; /* Deixar o texto em negrito */
+                align-items: flex-end;
+                margin-bottom: 10px;
+                font-weight: bold;
             }
             .recibo-popup .receipt-top-info .assinatura-header {
                 margin-top: 10px;
@@ -1948,12 +2059,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 border-bottom: none;
                 text-decoration: none;
             }
-            .data-field-blue {
-                color: blue;
-            }
-            .data-field-red {
-                color: red;
-            }
+            .data-field-blue { color: blue; }
+            .data-field-red { color: red; }
             .data-field-yellow {
                 color: orange;
                 font-weight: bold;
@@ -1965,23 +2072,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             .carimbo-overlay {
                 position: absolute;
-                top: 13.9px; /* MODIFICADO */
+                top: 13.9px;
                 left: 50%;
                 transform: translateX(-50%);
-                width: 434px; /* ALTERADO: Original 510px - 15% */
+                width: 434px;
                 height: auto;
                 opacity: 0.8;
                 z-index: 10;
-                margin-left: 196.56px; /* ALTERADO: Original 64.26px + 132.3px (3.5cm para a direita) */
+                margin-left: 196.56px;
             }
-            /* Adjustments for the carimbo in the popup, especially if .recibo-popup .assinatura is text-align: left */
             @media (max-width: 768px) {
                 .carimbo-overlay {
-                    top: auto !important; /* Reset top */
-                    bottom: -76.7px; /* MODIFICADO */
-                    left: 142.3px !important; /* ALTERADO: Original 10px + 132.3px (3.5cm) para a direita */
+                    top: auto !important;
+                    bottom: -76.7px;
+                    left: 142.3px !important;
                     transform: translateX(0) !important;
-                    width: 255px !important; /* ALTERADO: Original 300px - 15% */
+                    width: 255px !important;
                     margin-left: 0 !important;
                 }
             }
@@ -1996,7 +2102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `);
         newWindow.document.close();
         newWindow.focus();
-        newWindow.print(); // Auto-print
+        newWindow.print();
     }
 
 
@@ -2026,6 +2132,12 @@ document.addEventListener('DOMContentLoaded', () => {
             clientModal.classList.remove('hidden');
         } else if (action === 'add-contract') {
             openContractModal();
+        } 
+        // NOVO: Ações de exportar e importar
+        else if (action === 'export-data') {
+            exportDataToFile();
+        } else if (action === 'import-data') {
+            importFileInput.click(); // Abre o seletor de ficheiros
         }
         
         if (view) {
@@ -2036,7 +2148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (view === 'invoices-view') renderInvoicesTable();
             if (view === 'payments-view') renderPaymentsTable();
             if (view === 'contracts-view') renderContractsTable();
-            if (view === 'receipts-view') renderReceipts(); // Chamada inicial para mostrar todos os recibos ativos
+            if (view === 'receipts-view') renderReceipts();
         }
     });
 
@@ -2097,7 +2209,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     state.clients = state.clients.filter(c => c.id != id);
                     delete state.invoices[id];
                     delete state.payments[id];
-                    // Also delete related contracts
                     for (const contractId in state.contracts) {
                         if (state.contracts[contractId].clientId == id) {
                             delete state.contracts[contractId];
@@ -2107,24 +2218,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderAllTables();
                 });
             }
-        } else if (action === 'reset-meter') { // <<< NOVA LÓGICA AQUI
+        } else if (action === 'reset-meter') {
             if (confirm(`Tem a certeza que deseja simular a troca do contador para o cliente #${id}? A dívida atual será calculada e transferida, e as leituras serão zeradas.`)) {
                 requestVerificationCode(() => {
                     const invoice = state.invoices[id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
                     const payment = state.payments[id] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
                     
-                    // Calcular o valor remanescente do ciclo atual
                     const { totalToPay } = calculateInvoiceTotals(id);
                     const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
                     const remainingAmount = totalToPay - totalPaid;
 
-                    // Atualizar a fatura para o "novo contador"
                     state.invoices[id].debt = remainingAmount > 0 ? remainingAmount : 0;
-                    state.invoices[id].prevReading = 0; // Zerar leitura anterior
-                    state.invoices[id].currentReading = 0; // Zerar leitura atual
+                    state.invoices[id].prevReading = 0;
+                    state.invoices[id].currentReading = 0;
                     state.invoices[id].customAmount = null;
 
-                    // Reiniciar os pagamentos para o novo ciclo
                     state.payments[id] = { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
 
                     saveData();
@@ -2193,7 +2301,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  requestVerificationCode(() => {
                     updateStateFromCell(cell, newCellValue);
                  }, () => {
-                    cell.textContent = originalCellValue; // Revert on failure
+                    cell.textContent = originalCellValue;
                  });
             }
         } else if (e.type === 'keydown' && e.key === 'Enter') {
@@ -2220,7 +2328,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if ((client.situacao === 'F' || client.situacao === 'N') && (field === 'prevReading' || field === 'currentReading')) {
             alert(`Não é possível alterar as leituras de um cliente com a situação "${client.situacao}".`);
-            renderAllTables(); // Reverte a alteração visual
+            renderAllTables();
             return;
         }
 
@@ -2281,7 +2389,7 @@ document.addEventListener('DOMContentLoaded', () => {
             payment[field].date = (newAmount > 0) ? new Date().toISOString() : null;
             saveData();
             renderPaymentsTable();
-            renderInvoicesTable(); // Re-render invoices to update "Valor a Pagar" if debt was paid
+            renderInvoicesTable();
         });
     }
 
@@ -2289,7 +2397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cell = e.target.closest('.payment-cell');
         if (!cell) return;
         const contractId = cell.dataset.contractId;
-        const field = cell.dataset.field; // p1, p2, p3
+        const field = cell.dataset.field;
         const contract = state.contracts[contractId];
         if (!contract) return;
 
@@ -2308,7 +2416,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 .filter(key => key !== field)
                 .reduce((sum, key) => sum + (contract.payments[key].amount || 0), 0);
             
-            // Check if new total payment exceeds contract value
             if (paymentsExceptCurrent + newAmount > contract.value) {
                 alert(`O valor total dos pagamentos (${(paymentsExceptCurrent + newAmount).toFixed(2)} MZN) não pode exceder o valor do contrato (${contract.value.toFixed(2)} MZN).`);
                 return;
@@ -2322,7 +2429,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     newMonthButton.addEventListener('click', () => {
-        // Validate if all clients with situation 'A' have current readings
         const clientsWithoutCurrentReading = state.clients.filter(client =>
             client.situacao === 'A' && (!state.invoices[client.id] || !state.invoices[client.id].currentReading)
         );
@@ -2343,16 +2449,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const totalPaid = (payment.p1.amount || 0) + (payment.p2.amount || 0) + (payment.p3.amount || 0);
                     
                     let remainingAmount;
-                    const { totalToPay } = calculateInvoiceTotals(clientId); // Re-calculate based on current invoice state
+                    const { totalToPay } = calculateInvoiceTotals(clientId);
                     remainingAmount = totalToPay - totalPaid;
                     
-                    // Update invoice for new month
                     state.invoices[clientId].debt = remainingAmount > 0 ? remainingAmount : 0;
                     state.invoices[clientId].prevReading = invoice.currentReading || 0;
                     state.invoices[clientId].currentReading = 0;
-                    state.invoices[clientId].customAmount = null; // Reset custom amount for new month
+                    state.invoices[clientId].customAmount = null;
 
-                    // Reset payments for new month
                     state.payments[clientId] = { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
                 });
                 saveData();
@@ -2362,41 +2466,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    printReceiptsButton.addEventListener('click', () => {
-        // This button is intentionally made redundant as generateReceipt directly prints.
-        alert('Por favor, use o botão "Gerar" na tabela de pagamentos para imprimir os recibos no formato A4.');
-    });
-
     // --- Contratos Logic ---
     function openContractModal(contract = null) {
         contractForm.reset();
-        contractIdInput.value = ''; // This will hold clientId for new contract
+        contractIdInput.value = '';
         contractModalTitle.textContent = 'Adicionar Contrato';
-        contractValueInput.value = 5000; // Default value
+        contractValueInput.value = 5000;
 
-        // Populate client select
         contractClientSelect.innerHTML = '<option value="">Selecione um cliente</option>';
         state.clients.forEach(client => {
-            // Check if client already has a contract
             const hasContract = Object.values(state.contracts).some(c => c.clientId === client.id);
             const option = document.createElement('option');
             option.value = client.id;
             option.textContent = `${client.name} (ID: ${client.id})`;
             if (hasContract) {
-                option.disabled = true; // Disable if client already has a contract
+                option.disabled = true;
                 option.textContent += ' (Já tem contrato)';
             }
             contractClientSelect.appendChild(option);
         });
 
-        if (contract) {
-            // Edit mode (not currently used based on prompt, but good to have)
-            // contractModalTitle.textContent = 'Editar Contrato';
-            // contractIdInput.value = contract.id; // This would be the contract ID
-            // contractClientSelect.value = contract.clientId;
-            // contractClientSelect.disabled = true; // Cannot change client for existing contract
-            // contractValueInput.value = contract.value;
-        }
         contractModal.classList.remove('hidden');
     }
 
@@ -2419,7 +2508,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Check for duplicate contract for the same client
         const existingContract = Object.values(state.contracts).find(c => c.clientId === clientId);
         if (existingContract) {
             alert("Este cliente já possui um contrato.");
@@ -2427,18 +2515,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         requestVerificationCode(() => {
-            // --- INÍCIO DA CORREÇÃO ---
-            
-            // 1. Obter todos os IDs de contratos existentes e convertê-los para números.
             const existingContractIds = Object.keys(state.contracts).map(Number);
-
-            // 2. Encontrar o ID mais alto. Se não houver contratos, começar com 1000.
             const maxId = existingContractIds.length > 0 ? Math.max(...existingContractIds) : 1000;
-
-            // 3. O novo ID será o ID mais alto + 1.
             const newContractId = maxId + 1;
-            
-            // --- FIM DA CORREÇÃO ---
 
             state.contracts[newContractId] = {
                 id: newContractId,
@@ -2482,14 +2561,14 @@ document.addEventListener('DOMContentLoaded', () => {
     invoicesTableBody.addEventListener('blur', handleCellEdit, true);
     invoicesTableBody.addEventListener('keydown', handleCellEdit);
     paymentsTableBody.addEventListener('click', handlePaymentClick);
-    contractsTableBody.addEventListener('click', handleContractPaymentClick); // For contract payments
-
-    // Search input listeners
+    contractsTableBody.addEventListener('click', handleContractPaymentClick);
     clientSearchClients.addEventListener('input', renderClientsTable);
     clientSearchPayments.addEventListener('input', renderPaymentsTable);
-    invoiceSearch.addEventListener('input', renderInvoicesTable); // Add event listener for invoice search
+    invoiceSearch.addEventListener('input', renderInvoicesTable);
 
-    // NOVO EVENT LISTENER PARA GERAR RECIBOS POR INTERVALO DE ID
+    // NOVO: Listener para o input de ficheiro de importação
+    importFileInput.addEventListener('change', importDataFromFile);
+
     generateReceiptsByRangeButton.addEventListener('click', () => {
         const startId = parseInt(clientStartIdInput.value);
         const endId = parseInt(clientEndIdInput.value);
@@ -2509,7 +2588,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderReceipts(startId, endId);
     });
+    
+    editReceiptOrderButton.addEventListener('click', () => {
+        const currentOrderStr = state.receiptOrder.join(', ');
+        const newOrderStr = prompt("Edite a sequência de IDs dos clientes, separados por vírgula:", currentOrderStr);
 
+        if (newOrderStr === null) {
+            return;
+        }
+
+        const newOrderArray = newOrderStr
+            .split(',')
+            .map(s => s.trim())
+            .filter(s => s !== '')
+            .map(s => parseInt(s, 10))
+            .filter(num => !isNaN(num));
+
+        requestVerificationCode(() => {
+            state.receiptOrder = newOrderArray;
+            saveData();
+            renderReceipts(); 
+            alert('Ordem da lista atualizada com sucesso!');
+        });
+    });
 
     // --- INICIALIZAÇÃO ---
     loadData();

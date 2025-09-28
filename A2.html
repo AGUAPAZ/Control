@@ -388,7 +388,7 @@
 
         /* Estilo para a linha que divide as faturas no ecrã */
         .invoice-divider {
-            margin: 2rem 0;
+            margin: 1cm 0; /* ALTERADO */
             border: none;
             border-top: 2px dashed var(--secondary-color);
         }
@@ -428,11 +428,11 @@
                 margin: 0 auto !important; /* Centraliza na página A4 */
             }
 
-            /* 6. A linha divisória para a seção de recibos deverá estar visível na impressão */
+            /* 6. Garante que a linha divisória para a seção de recibos esteja visível na impressão */
             .invoice-divider {
-                display: block !important; /* Changed from none to block */
-                margin: 2rem 0 !important; /* Ensure it has space */
-                border-top: 2px dashed var(--secondary-color) !important; /* Make sure it's dashed and visible */
+                display: block !important;
+                margin: 1cm 0 !important; /* ALTERADO */
+                border-top: 2px dashed var(--secondary-color) !important;
             }
 
             /* 7. Estilo principal para cada recibo na impressão (usado na nova janela de impressão) */
@@ -536,6 +536,23 @@
                 margin-top: 0 !important; /* Remover margem extra no topo */
                 margin-bottom: 0 !important; /* Remover margem extra no rodapé */
             }
+            
+            /* --- INÍCIO DA ALTERAÇÃO: LÓGICA DE IMPRESSÃO 3-POR-PÁGINA --- */
+            
+            /* A lógica de qual linha divisória mostrar é agora controlada pelo JavaScript.
+               Esta secção CSS vai controlar as quebras de página. */
+
+            /* Força uma quebra de página APÓS o terceiro recibo de cada grupo (3º, 6º, 9º, etc.) */
+            #receipts-container .receipt:nth-of-type(3n) {
+                page-break-after: always;
+            }
+            
+            /* Evita que o último recibo da lista crie uma página em branco desnecessária no final. */
+            #receipts-container .receipt:last-of-type {
+                page-break-after: auto;
+            }
+
+            /* --- FIM DA ALTERAÇÃO --- */
         }
         /* --- FIM: ESTILOS DE IMPRESSÃO --- */
 
@@ -867,8 +884,8 @@
             <button data-view="receipts-view">Gerar Facturas</button>
             
             <hr style="margin: 20px 0;">
-            <button data-action="export-data" class="btn-success">Exportar Dados (Backup)</button>
-            <button data-action="import-data" class="btn-warning">Importar Dados (Restaurar)</button>
+            <button data-action="export-data" class="btn-danger">Exportar Dados (Backup)</button>
+            <button data-action="import-data" class="btn-danger">Importar Dados (Restaurar)</button>
             <input type="file" id="import-file-input" class="hidden" accept=".json">
         </section>
     </aside>
@@ -1504,6 +1521,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // --- INÍCIO DA ALTERAÇÃO ---
         clientsToPrint.forEach((client, index) => {
             let invoiceNumber;
             do {
@@ -1578,10 +1596,17 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
             receiptsContainer.innerHTML += receiptHTML;
 
-            if (index < clientsToPrint.length - 1) {
+            // Lógica para adicionar a linha divisória
+            const position = index + 1; // Posição na lista (1-based)
+            const isLastOverall = position === clientsToPrint.length;
+
+            // Adiciona a linha apenas se não for o último recibo do grupo de 3
+            // e também não for o último recibo da lista inteira.
+            if (!isLastOverall && (position % 3 !== 0)) {
                 receiptsContainer.innerHTML += '<hr class="invoice-divider">';
             }
         });
+        // --- FIM DA ALTERAÇÃO ---
     }
 
     function numberToWords(num) {
