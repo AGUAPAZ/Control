@@ -1163,7 +1163,7 @@ class ReceiptManager {
     else if (lastPaymentAmount < valorEmFaltaAntes && lastPaymentAmount > 0) {
         // Pagou incompleto - ainda falta valor
         const valorEmFaltaDepois = valorEmFaltaAntes - lastPaymentAmount;
-        receiptText = `Referente à fatura de consumo de água do mês de ${invoiceMonthName} e tem remanescente o valor ${valorEmFaltaDepois.toFixed(2)} MT.\nmotivo pela qual passamos o presente recibo.`;
+        receiptText = `à fatura de consumo de água do mês de ${invoiceMonthName}  tem remanescente o valor ${valorEmFaltaDepois.toFixed(2)} MT. \n motivo pela qual passamos o presente recibo.`;
     }
     // Caso 4: Pagamento exato do que faltava
     else if (lastPaymentAmount === valorEmFaltaAntes && lastPaymentAmount > 0) {
