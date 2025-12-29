@@ -1150,30 +1150,30 @@ class ReceiptManager {
     // Caso 1: Não tinha valor a pagar (0 ou negativo) e fez pagamento
     if (valorEmFaltaAntes <= 0 && lastPaymentAmount > 0) {
         // Valor que faltava era 0 e cliente faz pagamento adiantado
-        receiptText = 'Referente ao crédito para futura(s) fatura(s) de água, motivo pela qual passamos o presente recibo.';
+        receiptText = 'Referente ao crédito para futura(s) factura(s) de água, motivo pela qual passamos o presente recibo.';
     } 
     // Caso 2: Cliente pagou mais do que faltava com este pagamento específico
     else if (lastPaymentAmount > valorEmFaltaAntes && valorEmFaltaAntes > 0) {
         // Cliente pagou a mais do que faltava
         const pagamentoFatura = valorEmFaltaAntes;
         const credito = lastPaymentAmount - valorEmFaltaAntes;
-        receiptText = `Da qual ${pagamentoFatura.toFixed(2)} MT é referente ao pagamento da fatura do mês de ${invoiceMonthName} e ${credito.toFixed(2)} MT créditos \n para futura(s) faturas de água. motivo pela qual passamos o presente recibo.`;
+        receiptText = `Da qual ${pagamentoFatura.toFixed(2)}MT é referente ao pagamento da factura do mês de ${invoiceMonthName} e ${credito.toFixed(2)}MT créditos para futura(as) facturas de água, motivo pela qual passamos o presente recibo.`;
     }
     // Caso 3: Pagamento incompleto (ainda falta valor após este pagamento)
     else if (lastPaymentAmount < valorEmFaltaAntes && lastPaymentAmount > 0) {
         // Pagou incompleto - ainda falta valor
         const valorEmFaltaDepois = valorEmFaltaAntes - lastPaymentAmount;
-        receiptText = `Referente à fatura de consumo de água do mês de ${invoiceMonthName} e tem remanescente o valor ${valorEmFaltaDepois.toFixed(2)} MT.\nmotivo pela qual passamos o presente recibo.`;
+        receiptText = `referente a factura de consumo de agua do mes ${invoiceMonthName} e tem remanescente o valor ${valorEmFaltaDepois.toFixed(2)} MT, motivo pela qual passamos o presente recibo.`;
     }
     // Caso 4: Pagamento exato do que faltava
     else if (lastPaymentAmount === valorEmFaltaAntes && lastPaymentAmount > 0) {
         // Pagamento exato do que faltava
-        receiptText = `À fatura de consumo de água do mês de ${invoiceMonthName}, motivo pelo qual passamos o presente recibo.`;
+        receiptText = `à fatura de consumo de água do mês de ${invoiceMonthName}, motivo pelo qual passamos o presente recibo.`;
     }
     // Caso 5: Outras situações
     else {
         // Pagamento normal
-        receiptText = `À fatura de consumo de água do mês de ${invoiceMonthName}, motivo pelo qual passamos o presente recibo.`;
+        receiptText = `à fatura de consumo de água do mês de ${invoiceMonthName}, motivo pelo qual passamos o presente recibo.`;
     }
     
     const fillWithUnderscores = (text, maxLength) => {
@@ -1205,7 +1205,7 @@ class ReceiptManager {
         
         <div class="receipt-top-info">
           <span class="payment-form-header">Forma de pagamento:</span>
-          <span class="assinatura-header"></span>
+          <span class="assinatura-header">Assinatura: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         </div>
         
         <div class="assinatura-checklist-container">
@@ -1303,7 +1303,7 @@ class ReceiptManager {
         
         <div class="receipt-top-info">
           <span class="payment-form-header">Forma de pagamento:</span>
-          <span class="assinatura-header"></span>
+          <span class="assinatura-header">Assinatura: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
         </div>
         
         <div class="assinatura-checklist-container">
@@ -1425,7 +1425,6 @@ class ReceiptManager {
       .assinatura {
         text-align: left;
         position: relative;
-        min-height: 150px; /* Garantir altura mínima para o carimbo */
       }
       
       .receipt-top-info {
@@ -1469,33 +1468,24 @@ class ReceiptManager {
       
       .carimbo-overlay {
         position: absolute;
-        top: -4.8cm; /* MOVIDO 4cm PARA CIMA (de -0.8cm para -4.8cm) */
-        right: 8.5cm; /* MOVIDO 8.5cm PARA A DIREITA (de -6.8cm para 8.5cm) */
-        width: 9.7cm; /* DIMINUÍDA EM 3% DO TAMANHO TOTAL (10cm - 3% = 9.7cm) */
+        top: 13.9px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 434px;
         height: auto;
         opacity: 0.8;
-        z-index: 100; /* Valor alto para garantir que fique sobre os elementos */
-        pointer-events: none; /* Permite interação com elementos abaixo */
-      }
-      
-      /* Ajuste para impressão - posição fixa */
-      @media print {
-        .carimbo-overlay {
-          position: absolute;
-          top: -4.8cm; /* MOVIDO 4cm PARA CIMA (de -0.8cm para -4.8cm) */
-          right: 8.5cm; /* MOVIDO 8.5cm PARA A DIREITA (de -6.8cm para 8.5cm) */
-          width: 9.7cm; /* DIMINUÍDA EM 3% DO TAMANHO TOTAL (10cm - 3% = 9.7cm) */
-          height: auto;
-          opacity: 0.8;
-          z-index: 100;
-        }
+        z-index: 10;
+        margin-left: 196.56px;
       }
       
       @media (max-width: 768px) {
         .carimbo-overlay {
-          top: -4.8cm; /* MOVIDO 4cm PARA CIMA (de -0.8cm para -4.8cm) */
-          right: 8.5cm; /* MOVIDO 8.5cm PARA A DIREITA (de -6.8cm para 8.5cm) */
-          width: 7.76cm; /* 8cm - 3% = 7.76cm */
+          top: auto !important;
+          bottom: -76.7px;
+          left: 142.3px !important;
+          transform: translateX(0) !important;
+          width: 255px !important;
+          margin-left: 0 !important;
         }
       }
     `;
