@@ -115,8 +115,28 @@ class Utils {
     if (!value) return 0;
     
     try {
-      // Remove espaços e converte vírgula decimal para ponto
-      const cleanValue = String(value).trim().replace(/\./g, '').replace(',', '.');
+      let cleanValue = String(value).trim();
+      
+      // Remove espaços
+      cleanValue = cleanValue.replace(/\s/g, '');
+      
+      // Se a string contém vírgula e ponto, remove os pontos (separadores de milhar) e troca a vírgula por ponto
+      if (cleanValue.includes(',') && cleanValue.includes('.')) {
+        cleanValue = cleanValue.replace(/\./g, '').replace(',', '.');
+      } 
+      // Se a string contém vírgula e não contém ponto, troca a vírgula por ponto
+      else if (cleanValue.includes(',') && !cleanValue.includes('.')) {
+        cleanValue = cleanValue.replace(',', '.');
+      }
+      // Se a string contém ponto e não contém vírgula, e há mais de um ponto, remove os pontos (separadores de milhar)
+      else if (cleanValue.includes('.') && !cleanValue.includes(',')) {
+        const dotCount = (cleanValue.match(/\./g) || []).length;
+        if (dotCount > 1) {
+          cleanValue = cleanValue.replace(/\./g, '');
+        }
+        // Caso contrário, assume que o ponto é separador decimal e não faz nada
+      }
+      
       const parsed = parseFloat(cleanValue);
       return isNaN(parsed) ? 0 : parsed;
     } catch (error) {
@@ -1019,14 +1039,19 @@ class UIManager {
 class ReceiptManager {
   static numberToWords(num) {
     const units = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
-    const teens = ['dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezasseis', 'dezassete', 'dezoito', 'dezanove'];
+    const teens = ['dez', 'onze', 'treze', 'catorze', 'quinze', 'dezasseis', 'dezassete', 'dezoito', 'dezanove'];
     const tens = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
     const hundreds = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
     
     function convertGroup(n) {
       if (n === 0) return '';
       if (n < 10) return units[n];
-      if (n >= 10 && n < 20) return teens[n - 10];
+      if (n >= 10 && n < 20) {
+        if (n === 10) return 'dez';
+        if (n === 11) return 'onze';
+        if (n === 12) return 'doze';
+        return teens[n - 10];
+      }
       if (n >= 20 && n < 100) {
         return tens[Math.floor(n / 10)] + (n % 10 === 0 ? '' : ' e ' + units[n % 10]);
       }
@@ -1995,46 +2020,51 @@ class EventManager {
     } else if (action === 'generate-contract-receipt') {
       ReceiptManager.generateContractReceipt(contractId);
     } else {
+      // CORREÇÃO: Permitir edição direta dos valores de pagamento dos contratos
       const cell = target.closest('.payment-cell');
       if (!cell) return;
       
+      const contractId = cell.dataset.contractId;
       const field = cell.dataset.field;
       const contract = state.contracts[contractId];
       if (!contract) return;
       
-      const currentAmount = contract.payments[field].amount || 0;
-      
-      AuthService.requestVerification(() => {
-        const newAmountStr = prompt(`Insira o novo valor para o ${field.replace('p', '')}º pagamento do contrato:`, currentAmount);
-        if (newAmountStr === null) return;
+      // Se clicou no valor do pagamento (para editar)
+      if (target.classList.contains('payment-cell-value')) {
+        const currentAmount = contract.payments[field].amount || 0;
         
-        const newAmount = Utils.parseNumber(newAmountStr);
-        if (isNaN(newAmount)) {
-          alert("Valor inválido. Por favor, insira um número.");
-          return;
-        }
-        
-        const paymentsExceptCurrent = Object.keys(contract.payments)
-          .filter(key => key !== field)
-          .reduce((sum, key) => sum + (contract.payments[key].amount || 0), 0);
-        
-        // CORREÇÃO: NÃO PERMITIR VALOR ACIMA DO CONTRATO
-        if (paymentsExceptCurrent + newAmount > contract.value) {
-          const valorAtual = paymentsExceptCurrent + currentAmount;
-          const valorPermitido = contract.value - paymentsExceptCurrent;
-          alert(`O valor total dos pagamentos não pode exceder o valor do contrato.\n\n` +
-                `Valor atual dos pagamentos: ${valorAtual.toFixed(2)} MT\n` +
-                `Valor do contrato: ${contract.value.toFixed(2)} MT\n` +
-                `Valor máximo permitido para este pagamento: ${valorPermitido.toFixed(2)} MT`);
-          return;
-        }
-        
-        contract.payments[field].amount = newAmount;
-        contract.payments[field].date = (newAmount > 0) ? new Date().toISOString() : null;
-        
-        DataManager.save();
-        UIManager.renderContractsTable();
-      });
+        AuthService.requestVerification(() => {
+          const newAmountStr = prompt(`Insira o novo valor para o ${field.replace('p', '')}º pagamento do contrato:`, currentAmount);
+          if (newAmountStr === null) return;
+          
+          const newAmount = Utils.parseNumber(newAmountStr);
+          if (isNaN(newAmount)) {
+            alert("Valor inválido. Por favor, insira um número.");
+            return;
+          }
+          
+          const paymentsExceptCurrent = Object.keys(contract.payments)
+            .filter(key => key !== field)
+            .reduce((sum, key) => sum + (contract.payments[key].amount || 0), 0);
+          
+          // CORREÇÃO: NÃO PERMITIR VALOR ACIMA DO CONTRATO
+          if (paymentsExceptCurrent + newAmount > contract.value) {
+            const valorAtual = paymentsExceptCurrent + currentAmount;
+            const valorPermitido = contract.value - paymentsExceptCurrent;
+            alert(`O valor total dos pagamentos não pode exceder o valor do contrato.\n\n` +
+                  `Valor atual dos pagamentos: ${valorAtual.toFixed(2)} MT\n` +
+                  `Valor do contrato: ${contract.value.toFixed(2)} MT\n` +
+                  `Valor máximo permitido para este pagamento: ${valorPermitido.toFixed(2)} MT`);
+            return;
+          }
+          
+          contract.payments[field].amount = newAmount;
+          contract.payments[field].date = (newAmount > 0) ? new Date().toISOString() : null;
+          
+          DataManager.save();
+          UIManager.renderContractsTable();
+        });
+      }
     }
   }
   
@@ -2100,7 +2130,7 @@ class EventManager {
           const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
           const payment = state.payments[clientId] || { p1: { amount: 0 }, p2: { amount: 0 }, p3: { amount: 0 } };
           
-          // ALTERAÇÃO: Se o cliente está Fechado, não fazer nada
+          // ALTERAÇÃO: Se o cliente está Fechado, NÃO fazer nada nas leituras
           if (client.situacao === 'F') {
             console.log(`Cliente ${clientId} está Fechado. Ignorando no novo mês.`);
             return;
@@ -2110,31 +2140,39 @@ class EventManager {
           const totalPaid = Calculator.calculatePayments(payment);
           const remainingAmount = totalToPay - totalPaid;
           
-          // CORREÇÃO CRÍTICA: Manter créditos (valores negativos) na dívida
+          // CORREÇÃO CRÍTICA: Para TODOS os clientes (exceto Fechados), 
+          // a leitura atual deve passar para a leitura anterior
+          // E a leitura atual deve ser zerada para o próximo mês
+          
+          // CORREÇÃO: Transferir a leitura atual para a leitura anterior
+          state.invoices[clientId].prevReading = invoice.currentReading || 0;
+          
+          // CORREÇÃO: Zerar a leitura atual para o novo mês
+          state.invoices[clientId].currentReading = 0;
+          
+          // CORREÇÃO: Manter créditos (valores negativos) na dívida
           // Se o cliente pagou a mais (remainingAmount < 0), manter esse crédito
           state.invoices[clientId].debt = remainingAmount; // Pode ser negativo (crédito)
           
-          state.invoices[clientId].prevReading = invoice.currentReading || 0;
-          state.invoices[clientId].currentReading = 0;
           state.invoices[clientId].customAmount = null;
           
-          // CORREÇÃO: Zerar todos os pagamentos exceto se houver crédito negativo
-          // Se houver crédito, manter os pagamentos para referência
-          if (remainingAmount >= 0) {
-            state.payments[clientId] = { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
-          } else {
-            // Se houver crédito (remainingAmount < 0), manter os pagamentos mas marcar como aplicados
-            state.payments[clientId] = { 
-              p1: { amount: 0, date: null }, 
-              p2: { amount: 0, date: null }, 
-              p3: { amount: 0, date: null } 
-            };
+          // CORREÇÃO: Para clientes Não, ajustar a dívida corretamente
+          if (client.situacao === 'N') {
+            // Para clientes "Não", a dívida deve ser o valor em falta + consumo mínimo
+            state.invoices[clientId].debt = (remainingAmount > 0 ? remainingAmount : 0) + CONFIG.TARIFAS.CONSUMO_MINIMO;
           }
+          
+          // CORREÇÃO: Zerar todos os pagamentos
+          state.payments[clientId] = { 
+            p1: { amount: 0, date: null }, 
+            p2: { amount: 0, date: null }, 
+            p3: { amount: 0, date: null } 
+          };
         });
         
         DataManager.save();
         UIManager.renderAllTables();
-        alert('Novo mês iniciado com sucesso! Os valores foram atualizados (créditos mantidos, clientes Fechados ignorados).');
+        alert('Novo mês iniciado com sucesso! Leituras transferidas, dívidas atualizadas e pagamentos zerados.');
       });
     }
   }
