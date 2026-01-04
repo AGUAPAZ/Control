@@ -72,7 +72,16 @@ const DOM = {
   importFileInput: document.getElementById('import-file-input'),
   
   // Exportação
-  exportReadingsButton: null // Será criado dinamicamente
+  exportReadingsButton: null, // Será criado dinamicamente
+  
+  // Mensagens
+  messagesView: document.getElementById('messages-view'),
+  messagesTableBody: document.getElementById('messages-table-body'),
+  selectAllDebtButton: document.getElementById('select-all-debt'),
+  generateMessagesButton: document.getElementById('generate-messages'),
+  selectAllCheckbox: document.getElementById('select-all-checkbox'),
+  messagesOutput: document.getElementById('messages-output'),
+  messagesList: document.getElementById('messages-list')
 };
 
 // ================ ESTADO DA APLICAÇÃO ================
@@ -499,7 +508,7 @@ class DataManager {
           let skippedClients = 0;
           let skippedHeader = false;
           
-          // Para armazenar mensagens detalhadas de erro
+        // Para armazenar mensagens detalhadas de erro
           const errorMessages = [];
           const skippedMessages = [];
           
@@ -907,6 +916,32 @@ class UIManager {
         </td>
       `;
       DOM.contractsTableBody.appendChild(row);
+    });
+  }
+  
+  static renderMessagesTable() {
+    DOM.messagesTableBody.innerHTML = '';
+    DOM.messagesOutput.style.display = 'none';
+    DOM.messagesList.innerHTML = '';
+    DOM.selectAllCheckbox.checked = false;
+    
+    state.clients.forEach(client => {
+      const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
+      const { totalToPay } = Calculator.calculateInvoice(client.id, invoice, client.situacao);
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>
+          <input type="checkbox" class="client-checkbox" data-client-id="${client.id}" ${totalToPay > 0 ? '' : 'disabled'}>
+        </td>
+        <td>${client.id}</td>
+        <td>${client.name}</td>
+        <td>${client.contact}</td>
+        <td class="${invoice.debt > 0 ? 'text-danger' : ''}">${(invoice.debt || 0).toFixed(2)}</td>
+        <td class="${totalToPay > 0 ? 'text-danger' : ''}">${totalToPay.toFixed(2)}</td>
+        <td>${client.situacao || 'A'}</td>
+      `;
+      DOM.messagesTableBody.appendChild(row);
     });
   }
   
@@ -1596,6 +1631,7 @@ class EventManager {
         if (view === 'payments-view') UIManager.renderPaymentsTable();
         if (view === 'contracts-view') UIManager.renderContractsTable();
         if (view === 'receipts-view') UIManager.renderReceipts();
+        if (view === 'messages-view') UIManager.renderMessagesTable();
       }
     });
     
@@ -1665,6 +1701,11 @@ class EventManager {
     
     // Adicionar botão de exportação de leituras
     this.addExportReadingsButton();
+    
+    // Eventos para mensagens
+    DOM.selectAllDebtButton.addEventListener('click', () => this.handleSelectAllDebt());
+    DOM.generateMessagesButton.addEventListener('click', () => this.handleGenerateMessages());
+    DOM.selectAllCheckbox.addEventListener('change', (e) => this.handleSelectAllCheckbox(e));
   }
   
   static openClientModal(client = null) {
@@ -2244,6 +2285,253 @@ class EventManager {
     
     // Guardar referência
     DOM.exportReadingsButton = exportButton;
+  }
+  
+  // ================ FUNÇÕES PARA MENSAGENS ================
+  
+  static handleSelectAllDebt() {
+    const checkboxes = document.querySelectorAll('.client-checkbox:not(:disabled)');
+    checkboxes.forEach(checkbox => {
+      const clientId = checkbox.dataset.clientId;
+      const client = state.clients.find(c => c.id == clientId);
+      const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
+      const { totalToPay } = Calculator.calculateInvoice(clientId, invoice, client.situacao);
+      
+      // Selecionar apenas se tiver valor a pagar > 0
+      if (totalToPay > 0) {
+        checkbox.checked = true;
+      }
+    });
+    DOM.selectAllCheckbox.checked = true;
+  }
+  
+  static handleSelectAllCheckbox(e) {
+    const checkboxes = document.querySelectorAll('.client-checkbox:not(:disabled)');
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = e.target.checked;
+    });
+  }
+  
+  static handleGenerateMessages() {
+    const selectedCheckboxes = document.querySelectorAll('.client-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+      alert('Por favor, selecione pelo menos um cliente.');
+      return;
+    }
+    
+    // Mapeamento dos meses em português
+    const monthsMap = {
+      'janeiro': 'janeiro',
+      'fevereiro': 'fevereiro', 
+      'março': 'março',
+      'abril': 'abril',
+      'maio': 'maio',
+      'junho': 'junho',
+      'julho': 'julho',
+      'agosto': 'agosto',
+      'setembro': 'setembro',
+      'outubro': 'outubro',
+      'novembro': 'novembro',
+      'dezembro': 'dezembro'
+    };
+    
+    // Calcular nome do mês anterior
+    const currentDate = new Date();
+    const previousMonthDate = new Date(currentDate);
+    previousMonthDate.setMonth(currentDate.getMonth() - 1);
+    const monthNamePt = previousMonthDate.toLocaleString('pt-BR', { month: 'long' }).toLowerCase();
+    const monthName = monthsMap[monthNamePt] || monthNamePt;
+    
+    // Formatar o mês para exibição (WhatsApp) - primeira letra maiúscula
+    const monthNameDisplay = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    // Formatar o mês para SMS - todas maiúsculas
+    const monthNameSMS = monthName.toUpperCase();
+    
+    DOM.messagesList.innerHTML = '';
+    let messageCount = 0;
+    
+    selectedCheckboxes.forEach(checkbox => {
+      const clientId = checkbox.dataset.clientId;
+      const client = state.clients.find(c => c.id == clientId);
+      if (!client) return;
+      
+      const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
+      const { totalToPay, consumption } = Calculator.calculateInvoice(clientId, invoice, client.situacao);
+      
+      // Formatar ID do cliente com 3 dígitos
+      const formattedClientId = String(client.id).padStart(3, '0');
+      
+      // Calcular valores
+      const debtValue = invoice.debt || 0;
+      const consumoMensalValor = Math.max(0, totalToPay - debtValue);
+      
+      // Leitura anterior e atual
+      const leituraAnterior = invoice.prevReading || 0;
+      const leituraAtual = invoice.currentReading || 0;
+      
+      // MENSAGEM PARA WHATSAPP (formato mais completo e formatado)
+      const whatsappMessage = `Segue a informação referente à fatura de água do mês de ${monthNameDisplay}.
+
+Contador nº: ${formattedClientId}
+
+Titular: ${client.name}
+
+Total a Pagar: ${totalToPay.toFixed(2)} MT
+
+Detalhamento:
+
+Consumo Mensal: ${consumoMensalValor.toFixed(2)} MT
+Dívida Anterior: ${debtValue.toFixed(2)} MT
+
+Leituras:
+
+Anterior: ${leituraAnterior} m³ | Atual: ${leituraAtual} m³
+Consumo: ${consumption} m³
+
+Formas de Pagamento:
+
+Numerário: Mini estabelecimento Água Paz Tembe
+M-Pesa: 844582022 (António Rafael)
+M-Mola: 874042742 (Sara)
+
+Após o pagamento, envie o comprovativo por este meio.`;
+      
+      // MENSAGEM PARA SMS (formato compacto)
+      const smsMessage = `FATURA DE ÁGUA - ${monthNameSMS}
+
+Cliente: ${client.name}
+Contador: ${formattedClientId}
+TOTAL A PAGAR: ${totalToPay.toFixed(2)} MT
+
+Consumo: ${consumoMensalValor.toFixed(2)} MT
+Dívida: ${debtValue.toFixed(2)} MT
+
+Leituras (m³):
+Ant: ${leituraAnterior} | Atual: ${leituraAtual}
+Consumo: ${consumption}
+
+Pagamentos:
+Água Paz Tembe (Numerário)
+M-Pesa: 844582022 (António Rafael)
+M-Mola: 874042742 (Sara)
+
+Favor enviar o comprovativo após o pagamento.`;
+      
+      // Codificar as mensagens para URL
+      const encodedWhatsappMessage = encodeURIComponent(whatsappMessage);
+      const encodedSMSMessage = encodeURIComponent(smsMessage);
+      
+      const whatsappLink = `https://wa.me/258${client.contact}?text=${encodedWhatsappMessage}`;
+      const smsLink = `sms:258${client.contact}?body=${encodedSMSMessage}`;
+      
+      // Criar elemento da mensagem
+      const messageElement = document.createElement('div');
+      messageElement.className = 'message-item';
+      messageElement.style.marginBottom = '1.5rem';
+      messageElement.style.padding = '1rem';
+      messageElement.style.border = '1px solid #ddd';
+      messageElement.style.borderRadius = '5px';
+      messageElement.style.backgroundColor = '#fff';
+      
+      messageElement.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+          <h4 style="margin: 0;">${client.name} (ID: ${client.id})</h4>
+          <div style="display: flex; gap: 10px;">
+            <a href="${smsLink}" class="btn-sms" style="text-decoration: none; padding: 5px 10px; background: #4CAF50; color: white; border-radius: 4px; display: flex; align-items: center; gap: 5px;">
+              📱 SMS
+            </a>
+            <a href="${whatsappLink}" target="_blank" class="btn-success" style="text-decoration: none; padding: 5px 10px; background: #25D366; color: white; border-radius: 4px; display: flex; align-items: center; gap: 5px;">
+              💬 WhatsApp
+            </a>
+          </div>
+        </div>
+        <div style="margin-bottom: 0.5rem;">
+          <strong>Contacto:</strong> +258 ${client.contact}
+        </div>
+        <div style="margin-bottom: 0.5rem;">
+          <strong>Valor a Pagar:</strong> ${totalToPay.toFixed(2)} MT
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <h5 style="margin-top: 0; margin-bottom: 0.5rem; color: #25D366;">Mensagem WhatsApp:</h5>
+            <textarea readonly 
+              style="width: 100%; 
+                     padding: 0.5rem; 
+                     border: 1px solid #ccc; 
+                     border-radius: 3px; 
+                     font-family: sans-serif;
+                     font-size: 0.9rem;
+                     min-height: 300px;
+                     resize: vertical;
+                     white-space: pre-wrap;
+                     background-color: #f8fff8;">${whatsappMessage}</textarea>
+            <div style="margin-top: 0.3rem; font-size: 0.8rem; color: #666;">
+              WhatsApp: ${whatsappMessage.length} caracteres
+            </div>
+          </div>
+          
+          <div>
+            <h5 style="margin-top: 0; margin-bottom: 0.5rem; color: #4CAF50;">Mensagem SMS:</h5>
+            <textarea readonly 
+              style="width: 100%; 
+                     padding: 0.5rem; 
+                     border: 1px solid #ccc; 
+                     border-radius: 3px; 
+                     font-family: monospace;
+                     font-size: 0.85rem;
+                     min-height: 300px;
+                     resize: vertical;
+                     white-space: pre-wrap;
+                     background-color: #f8f8ff;">${smsMessage}</textarea>
+            <div style="margin-top: 0.3rem; font-size: 0.8rem; color: #666;">
+              SMS: ${smsMessage.length} caracteres
+            </div>
+          </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem;">
+          <div style="padding: 0.5rem; background: #f0f0f0; border-radius: 3px;">
+            <strong>Consumo:</strong> ${consumption} m³
+          </div>
+          <div style="padding: 0.5rem; background: #f0f0f0; border-radius: 3px;">
+            <strong>Leitura Anterior:</strong> ${leituraAnterior} m³
+          </div>
+          <div style="padding: 0.5rem; background: #f0f0f0; border-radius: 3px;">
+            <strong>Leitura Atual:</strong> ${leituraAtual} m³
+          </div>
+        </div>
+        
+        <hr style="margin: 1rem 0;">
+      `;
+      
+      DOM.messagesList.appendChild(messageElement);
+      messageCount++;
+    });
+    
+    DOM.messagesOutput.style.display = 'block';
+    
+    // Scroll para a área de mensagens
+    DOM.messagesOutput.scrollIntoView({ behavior: 'smooth' });
+    
+    // Mostrar resumo
+    const summary = document.createElement('div');
+    summary.className = 'message-summary';
+    summary.style.padding = '1rem';
+    summary.style.backgroundColor = '#e8f4fd';
+    summary.style.borderRadius = '5px';
+    summary.style.marginBottom = '1rem';
+    summary.innerHTML = `
+      <h4 style="margin-top: 0;">📊 Resumo</h4>
+      <p>✅ ${messageCount} mensagem(ns) gerada(s) com sucesso!</p>
+      <p><strong>WhatsApp:</strong> Formato completo com quebras de linha e organização visual</p>
+      <p><strong>SMS:</strong> Formato compacto para economizar caracteres</p>
+      <p>📱 Use os botões SMS ou WhatsApp para enviar a mensagem para cada cliente.</p>
+      <p><strong>Nota:</strong> As mensagens são geradas automaticamente com os dados do mês anterior (${monthNameDisplay}).</p>
+    `;
+    
+    DOM.messagesList.insertBefore(summary, DOM.messagesList.firstChild);
   }
 }
 

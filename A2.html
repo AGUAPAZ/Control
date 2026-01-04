@@ -33,6 +33,7 @@
             <button data-action="add-contract">Adicionar Contrato</button>
             <button data-view="contracts-view">Ver Contratos</button>
             <button data-view="receipts-view">Gerar Facturas</button>
+            <button data-view="messages-view">Enviar Mensagens</button>
             
             <hr style="margin: 20px 0;">
             <button data-action="export-data" class="btn-danger">Exportar Dados (Backup)</button>
@@ -151,6 +152,44 @@
                     <button id="edit-receipt-order-button" class="btn-secondary">Editar Sequência</button>
                 </div>
                 <div id="receipts-container">
+                </div>
+            </section>
+
+            <section id="messages-view" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Enviar Mensagens de Cobrança</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="select-all-debt" class="btn-secondary">Selecionar Todos com Dívida</button>
+                        <button id="generate-messages" class="btn-primary">Gerar Mensagens</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="messages-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">
+                                    <input type="checkbox" id="select-all-checkbox" title="Selecionar todos">
+                                </th>
+                                <th>Nº Cliente</th>
+                                <th>Nome</th>
+                                <th>Contacto</th>
+                                <th>Dívida (MZN)</th>
+                                <th>Valor a Pagar (MZN)</th>
+                                <th>Situação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="messages-table-body">
+                            <!-- As linhas serão preenchidas via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="messages-output" style="margin-top: 2rem; display: none;">
+                    <h3>Mensagens Geradas</h3>
+                    <div id="messages-list" style="background: #f5f5f5; padding: 1rem; border-radius: 5px; max-height: 500px; overflow-y: auto;">
+                        <!-- As mensagens serão exibidas aqui -->
+                    </div>
                 </div>
             </section>
         </main>
