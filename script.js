@@ -1277,9 +1277,13 @@ class ReceiptManager {
           </div>
           
           <div class="assinatura">
-            <span class="fill-underline" style="width: 25ch;"></span>
+            <div class="linha-assinatura-container">
+              <span class="fill-underline" style="width: 25ch;"></span>
+            </div>
             <img src="carimbo.png" alt="Carimbo" class="carimbo-overlay">
-            <br> <br> <strong>ID DO RECIBO&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </strong> <br /> <br><span class="fill-underline no-underline data-field-yellow">${machineSignature}</span>
+            <div class="id-recibo-container">
+              <strong>ID DO RECIBO&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </strong><br><span class="fill-underline no-underline data-field-yellow">${machineSignature}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1375,9 +1379,13 @@ class ReceiptManager {
           </div>
           
           <div class="assinatura">
-            <span class="fill-underline" style="width: 25ch;"></span>
+            <div class="linha-assinatura-container">
+              <span class="fill-underline" style="width: 25ch;"></span>
+            </div>
             <img src="carimbo.png" alt="Carimbo" class="carimbo-overlay">
-            <br> <br> <strong>ID DO RECIBO&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </strong> <br /> <br><span class="fill-underline no-underline data-field-yellow">${machineSignature}</span>
+            <div class="id-recibo-container">
+              <strong>ID DO RECIBO&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; </strong><br><span class="fill-underline no-underline data-field-yellow">${machineSignature}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1416,12 +1424,55 @@ class ReceiptManager {
           page-break-after: auto !important;
           page-break-inside: avoid;
         }
+        
+        /* NOVAS REGRAS PARA POSICIONAMENTO */
+        .linha-assinatura-container {
+          margin-top: -1.5cm !important; /* Movido 2.5cm para cima */
+        }
+        
+        .id-recibo-container {
+          margin-top: 0.8cm !important; /* Movido 1.2cm para baixo */
+        }
+        
+        .assinatura {
+          text-align: right;
+          padding-right: 1cm;
+          box-sizing: border-box;
+          position: relative;
+        }
+        
+        .assinatura strong {
+          display: block;
+          margin-bottom: 0.2cm;
+          position: relative;
+          z-index: 2;
+        }
+        
+        .assinatura .data-field-yellow {
+          display: block;
+          text-align: right;
+          margin-right: 0;
+          position: relative;
+          z-index: 2;
+        }
+        
         .receipt-divider-print {
           border: none;
           border-top: 1px dashed #999;
           margin: 0.4cm auto !important;
           width: 80% !important;
           display: block !important;
+        }
+        
+        .carimbo-overlay {
+          position: absolute;
+          top: -4.7cm; /* Ajustado para compensar o movimento da linha da assinatura */
+          right: -0.5cm;
+          width: 8.7cm;
+          height: auto;
+          opacity: 0.8;
+          z-index: 1;
+          pointer-events: none;
         }
       }
       
@@ -1482,10 +1533,38 @@ class ReceiptManager {
         }
       }
       
+      /* REGRAS PARA VISUALIZAÇÃO NA TELA */
       .assinatura {
-        text-align: left;
+        text-align: right;
+        padding-right: 1cm;
         position: relative;
-        min-height: 150px; /* Garantir altura mínima para o carimbo */
+        min-height: 150px;
+        box-sizing: border-box;
+      }
+      
+      .linha-assinatura-container {
+        margin-top: -1.5cm !important; /* Movido 2.5cm para cima na visualização também */
+      }
+      
+      .id-recibo-container {
+        margin-top: 0.8cm !important; /* Movido 1.2cm para baixo na visualização também */
+      }
+      
+      .assinatura strong {
+        display: block;
+        margin-bottom: 0.2cm;
+        position: relative;
+        z-index: 2;
+      }
+      
+      .assinatura .data-field-yellow {
+        display: block;
+        text-align: right;
+        margin-right: 0;
+        margin-top: 5px;
+        word-break: break-all;
+        position: relative;
+        z-index: 2;
       }
       
       .receipt-top-info {
@@ -1529,33 +1608,20 @@ class ReceiptManager {
       
       .carimbo-overlay {
         position: absolute;
-        top: -4.8cm; /* MOVIDO 4cm PARA CIMA (de -0.8cm para -4.8cm) */
-        right: 8.5cm; /* MOVIDO 8.5cm PARA A DIREITA (de -6.8cm para 8.5cm) */
-        width: 9.7cm; /* DIMINUÍDA EM 3% DO TAMANHO TOTAL (10cm - 3% = 9.7cm) */
+        top: -4.7cm;
+        right: -0.5cm;
+        width: 8.7cm;
         height: auto;
         opacity: 0.8;
-        z-index: 100; /* Valor alto para garantir que fique sobre os elementos */
-        pointer-events: none; /* Permite interação com elementos abaixo */
-      }
-      
-      /* Ajuste para impressão - posição fixa */
-      @media print {
-        .carimbo-overlay {
-          position: absolute;
-          top: -4.8cm; /* MOVIDO 4cm PARA CIMA (de -0.8cm para -4.8cm) */
-          right: 8.5cm; /* MOVIDO 8.5cm PARA A DIREITA (de -6.8cm para 8.5cm) */
-          width: 9.7cm; /* DIMINUÍDA EM 3% DO TAMANHO TOTAL (10cm - 3% = 9.7cm) */
-          height: auto;
-          opacity: 0.8;
-          z-index: 100;
-        }
+        z-index: 1;
+        pointer-events: none;
       }
       
       @media (max-width: 768px) {
         .carimbo-overlay {
-          top: -4.8cm; /* MOVIDO 4cm PARA CIMA (de -0.8cm para -4.8cm) */
-          right: 8.5cm; /* MOVIDO 8.5cm PARA A DIREITA (de -6.8cm para 8.5cm) */
-          width: 7.76cm; /* 8cm - 3% = 7.76cm */
+          top: -5.8cm;
+          right: -0.5cm;
+          width: 7.76cm;
         }
       }
     `;

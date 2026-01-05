@@ -512,6 +512,13 @@ thead th {
     }
     .recibo-popup .assinatura {
         text-align: right !important; /* Align signature text to the right for print */
+        padding-right: 1cm !important; /* Alinhar 1cm da borda direita */
+        box-sizing: border-box !important;
+    }
+    .recibo-popup .assinatura .data-field-yellow {
+        display: block !important;
+        text-align: right !important;
+        margin-right: 0 !important;
     }
 
     /* Novo estilo para o topo da seção de pagamento/assinatura no recibo de impressão */
@@ -583,9 +590,18 @@ thead th {
 }
 
 .recibo-popup .assinatura {
-    margin-top: 10px;
     text-align: right;
+    padding-right: 1cm;
     position: relative; /* Adicionado para posicionamento do carimbo */
+    min-height: 150px; /* Garantir altura mínima para o carimbo */
+    box-sizing: border-box;
+}
+.recibo-popup .assinatura .data-field-yellow {
+    display: block;
+    text-align: right;
+    margin-right: 0;
+    margin-top: 5px;
+    word-break: break-all;
 }
 /* Estilo para o texto "Assinatura e carimbo" */
 .recibo-popup .assinatura span {
@@ -775,6 +791,7 @@ thead th {
     }
     .recibo-popup .assinatura {
         text-align: left; /* Align signature left when stacked */
+        padding-right: 0; /* Remove padding quando empilhado */
     }
     .carimbo-overlay {
         top: auto !important; /* Reset top for mobile view */
@@ -836,6 +853,7 @@ thead th {
     }
     .recibo-popup .assinatura {
         text-align: right;
+        padding-right: 1cm; /* Alinhar 1cm da borda direita */
     }
     .carimbo-overlay {
         top: 13.9px !important; /* MODIFICADO: Posição revertida -42.8px + 1.5cm (56.7px) */

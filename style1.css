@@ -1,0 +1,847 @@
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --bg-color: #f4f7f6;
+    --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --border-radius: 6px;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--dark-color);
+    padding-top: 80px; /* Espaço para o cabeçalho fixo */
+}
+
+#app {
+    width: 100%;
+    max-width: 1200px;
+    padding: 1rem;
+    margin: 0 auto; /* Centra o container principal */
+    display: flex; /* Use flexbox for main content + sidebar */
+    flex-direction: column; /* Default to column for small screens */
+}
+
+/* Classes de Utilidade */
+.hidden {
+    display: none !important;
+}
+.text-danger {
+    color: var(--danger-color);
+    font-weight: bold; /* Adicionado para maior destaque */
+}
+.text-success {
+    color: var(--success-color);
+}
+
+/* Cabeçalho */
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--box-shadow);
+    z-index: 1000;
+}
+header h1 {
+    font-size: 1.5rem;
+    padding-left: 1rem;
+}
+header button {
+    margin-right: 1rem;
+}
+
+/* Botões */
+button, .button {
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+button:hover, .button:hover {
+    opacity: 0.9;
+}
+button:active, .button:active {
+    transform: scale(0.98);
+}
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+.btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+.btn-warning {
+     background-color: var(--warning-color);
+     color: var(--dark-color);
+}
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+.btn-icon {
+    padding: 0.5rem;
+    line-height: 1;
+}
+
+/* Painel de Menu */
+aside {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px; /* Adjusted for smaller screens */
+    height: 100%;
+    background-color: white;
+    box-shadow: var(--box-shadow);
+    padding: 60px 1.5rem 1.5rem;
+    transform: translateX(-250px); /* Adjusted width */
+    transition: transform 0.3s ease-in-out;
+    z-index: 1001;
+    overflow-y: auto; /* Permite scroll se o menu for grande */
+}
+aside.open {
+    transform: translateX(0);
+}
+#admin-actions button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 1rem;
+    background-color: var(--light-color);
+}
+
+/* Conteúdo Principal e Vistas */
+main section {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-top: 1.5rem;
+}
+main h2 {
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--light-color);
+    padding-bottom: 0.5rem;
+}
+
+/* Tabelas */
+.table-responsive {
+    overflow-x: auto; /* Make tables horizontally scrollable on small screens */
+    -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    min-width: 600px; /* Ensure table has a minimum width to enable scrolling */
+}
+th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+thead th {
+    background-color: var(--light-color);
+    font-weight: bold;
+}
+/* Efeito Zebra */
+tbody tr:nth-child(even) {
+    background-color: #f2f2f2; /* Cor mais escura para linhas pares */
+}
+tbody tr:hover {
+    background-color: #e0e0e0; /* Hover effect */
+}
+
+td[contenteditable="true"] {
+    background-color: #fffbe6;
+    outline: 1px dashed var(--warning-color);
+    cursor: cell;
+}
+.payment-date {
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    display: block;
+    margin-top: 4px;
+}
+.payment-cell-value {
+     cursor: pointer;
+     display: inline-block;
+     padding: 4px;
+     border-radius: 4px;
+     border: 1px dashed transparent;
+     transition: all 0.2s ease-in-out;
+}
+.payment-cell-value:hover {
+     background-color: #fffbe6;
+     border-color: var(--warning-color);
+}
+.situacao-select {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #ccc;
+    background-color: white;
+}
+
+
+/* Ações na Tabela */
+.actions-cell > button {
+    margin-right: 5px;
+}
+.actions-cell .action-toggle {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+}
+.actions-cell .action-buttons {
+    display: none;
+    margin-top: 5px;
+}
+.actions-cell .action-buttons.visible {
+    display: block;
+}
+.actions-cell .action-buttons button {
+    display: inline-block;
+    width: auto;
+    margin-right: 5px;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    margin-bottom: 5px; /* Added for better stacking on small screens */
+}
+
+/* Formulários e Inputs */
+form .form-group {
+    margin-bottom: 1.5rem;
+}
+form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+input[type="text"], input[type="password"], input[type="date"], input[type="number"], select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+}
+.input-group {
+    display: flex;
+}
+.input-group-text {
+    padding: 0.75rem;
+    background-color: var(--light-color);
+    border: 1px solid #ccc;
+    border-right: none;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+}
+.input-group input {
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+.read-only-input {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+/* Janela Modal */
+#client-modal, #contract-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem; /* Added padding for small screens */
+}
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    max-height: 90vh; /* Prevent modal from overflowing on very small screens */
+    overflow-y: auto; /* Enable scrolling for modal content if needed */
+}
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--secondary-color);
+}
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+}
+
+/* Estilos para Recibos */
+.receipt {
+    border: 2px solid var(--dark-color);
+    padding: 1rem;
+    margin-bottom: 2rem;
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #fff;
+    border-radius: var(--border-radius); /* Arredondado */
+    box-shadow: var(--box-shadow); /* Sombra */
+}
+.receipt-header {
+    text-align: center;
+    border-bottom: 1px solid var(--dark-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+.receipt-header h4 {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+.receipt-body p {
+    line-height: 1.8;
+}
+.receipt-body .data-field {
+    font-weight: bold;
+    display: inline-block;
+    padding: 0 0.5rem;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    min-width: 90px;
+}
+.receipt-body table {
+    width: 100%;
+    font-size: 0.9rem;
+    border-collapse: collapse;
+    border: 1px solid var(--dark-color);
+}
+.receipt-body table th,
+.receipt-body table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+thead th {
+    background-color: var(--light-color);
+    font-weight: bold;
+}
+.receipt-body table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+.receipt-body table td[colspan] {
+    text-align: right;
+    font-weight: bold;
+}
+.receipt-body table .data-field {
+     text-decoration: none;
+}
+.receipt-footer {
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+.receipt-footer p {
+    margin-bottom: 0; /* CORREÇÃO PARA ECRÃ */
+}
+
+/* Estilo para a linha que divide as faturas no ecrã */
+.invoice-divider {
+    margin: 1cm 0; /* ALTERADO */
+    border: none;
+    border-top: 2px dashed var(--secondary-color);
+}
+
+
+/* --- INÍCIO: ESTILOS DE IMPRESSÃO --- */
+@media print {
+    /* 1. Oculta todos os elementos que estão diretamente no <body> */
+    body > * {
+        display: none !important;
+    }
+
+    /* 2. Mostra o contentor da aplicação e o caminho até à secção de recibos */
+    #app, main, #receipts-view {
+        display: block !important;
+    }
+    
+    /* 3. Remove paddings, margens e sombras para aproveitar a página toda */
+    body, #app, main, #receipts-view {
+        padding: 0 !important;
+        margin: 0 !important;
+        background-color: white !important;
+        box-shadow: none !important;
+        border: none !important;
+        color: #000 !important; /* Garante texto preto na impressão */
+    }
+
+    /* 4. Oculta o cabeçalho da vista de recibos (que tem o título e o botão) */
+    #receipts-view > div:first-of-type {
+        display: none !important;
+    }
+
+    /* 5. Garante que o container dos recibos está visível e centralizado para impressão */
+    #receipts-container {
+        display: block !important;
+        width: 21cm; /* A4 width */
+        margin: 0 auto !important; /* Centraliza na página A4 */
+    }
+
+    /* 6. Garante que a linha divisória para a seção de recibos esteja visível na impressão */
+    .invoice-divider {
+        display: block !important;
+        margin: 1cm 0 !important; /* ALTERADO */
+        border-top: 2px dashed var(--secondary-color) !important;
+    }
+
+    /* 7. Estilo principal para cada recibo na impressão (usado na nova janela de impressão) */
+    .recibo-popup {
+        width: 21cm !important; /* Largura total da folha A4 */
+        height: 11.8cm !important; /* MODIFICADO: Altura ajustada para caber dois por página (12.8cm - 8%) */
+        margin: 0.8cm 0 0.4cm !important; /* Margem superior, sem margens laterais, e inferior reduzida */
+        border: 1px solid black !important;
+        padding: 20px !important; /* Padding do recibo */
+        box-sizing: border-box !important;
+        font-family: monospace !important;
+        position: relative !important;
+        page-break-after: auto !important; /* CRÍTICO: Não forçar quebras de página após CADA recibo na nova janela */
+        page-break-inside: avoid; /* Prevent breaking a receipt in half */
+    }
+
+    /* Se houver mais de 2 recibos, o ideal é que cada par se ajuste */
+    /* Para 2 recibos por página, esta regra é fundamental */
+    .recibo-popup:nth-child(even) { /* Para o segundo recibo em cada par */
+        /* margin-top: 0.8cm !important; */ /* This can be removed, as the general margin and divider will handle spacing */
+    }
+    
+    /* Ajustar os tamanhos de fonte para o recibo ficar mais compacto na impressão */
+    .recibo-popup .cabecalho .agua-paz {
+        font-size: 15pt; /* MODIFICADO: 16pt -> 15pt */
+    }
+    .recibo-popup .cabecalho .recibo-num {
+        font-size: 11pt; /* MODIFICADO: 12pt -> 11pt */
+    }
+    .recibo-popup .linha {
+        font-size: 9pt; /* MODIFICADO: 10pt -> 9pt */
+        line-height: 1.2;
+    }
+    .recibo-popup .checklist label {
+        font-size: 8pt; /* MODIFICADO: 9pt -> 8pt */
+    }
+    .recibo-popup .assinatura-maquina {
+        font-size: 10pt; /* MODIFICADO: 11pt -> 10pt */
+    }
+    .carimbo-overlay {
+        top: 21.7px !important; /* MODIFICADO: Ajuste a posição vertical do carimbo para impressão -35px + 1.5cm (56.7px) */
+        left: 50%; /* Centraliza horizontalmente */
+        transform: translateX(-50%); /* Ajuste fino para centralizar */
+        width: 383px !important; /* ALTERADO: Original 450px - 15% */
+        margin-left: 132.3px !important; /* Mover 3.5cm para a direita */
+    }
+
+    /* Estilo da nova linha HR para impressão */
+    .receipt-divider-print {
+        border: none;
+        border-top: 1px dashed #999; /* Linha tracejada suave */
+        margin: 0.4cm auto !important; /* Margem para separar os recibos */
+        width: 80% !important; /* Largura da linha divisória */
+        display: block !important; /* Garante que a linha é visível na impressão */
+    }
+
+    /* Outros ajustes finos para tabelas dentro do recibo, se aplicável */
+    .receipt-body table {
+        font-size: 8pt !important;
+        margin-top: 0.3cm !important; /* Reduzir a margem superior da tabela */
+    }
+    .receipt-body table th,
+    .receipt-body table td {
+        padding: 0.15cm !important; /* Reduzir padding das células da tabela */
+        border: 1px solid #333 !important;
+    }
+    .receipt-footer {
+        font-size: 8pt !important;
+        margin-top: 0.3cm !important;
+        padding-top: 0.15cm !important;
+    }
+    .receipt-footer p {
+        margin-bottom: 0 !important;
+    }
+    /* Explicitly set for print to ensure row layout */
+    .recibo-popup .assinatura-checklist-container {
+        flex-direction: row !important; /* Force side-by-side for print */
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+    }
+    .recibo-popup .checklist,
+    .recibo-popup .assinatura {
+        width: 48% !important; /* Ensure they share space */
+        margin-bottom: 0 !important;
+    }
+    .recibo-popup .assinatura {
+        text-align: right !important; /* Align signature text to the right for print */
+    }
+
+    /* Novo estilo para o topo da seção de pagamento/assinatura no recibo de impressão */
+    .recibo-popup .receipt-top-info {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-end !important; /* Alinhar texto com a parte de baixo */
+        font-weight: bold !important;
+        font-size: 9pt !important; /* MODIFICADO: 10pt -> 9pt */
+        margin-bottom: 5px !important; /* Espaço entre o cabeçalho e os checkboxes */
+    }
+
+    .recibo-popup .receipt-top-info .assinatura-header-print {
+        margin-top: 0 !important; /* Remover margem extra no topo */
+        margin-bottom: 0 !important; /* Remover margem extra no rodapé */
+    }
+    
+    /* --- INÍCIO DA ALTERAÇÃO: LÓGICA DE IMPRESSÃO 3-POR-PÁGINA --- */
+    
+    /* A lógica de qual linha divisória mostrar é agora controlada pelo JavaScript.
+       Esta secção CSS vai controlar as quebras de página. */
+
+    /* Força uma quebra de página APÓS o terceiro recibo de cada grupo (3º, 6º, 9º, etc.) */
+    #receipts-container .receipt:nth-of-type(3n) {
+        page-break-after: always;
+    }
+    
+    /* Evita que o último recibo da lista crie uma página em branco desnecessária no final. */
+    #receipts-container .receipt:last-of-type {
+        page-break-after: auto;
+    }
+
+    /* --- FIM DA ALTERAÇÃO --- */
+}
+/* --- FIM: ESTILOS DE IMPRESSÃO --- */
+
+/* Estilos do Recibo Separado (apenas para visualização em ecrã, será sobrescrito pelo @media print) */
+.recibo-popup {
+    width: 97%;
+    /* A altura em percentagem para ecrã pode permanecer a mesma, pois é relativa ao viewport */
+    height: 45%; 
+    border: 1px solid black;
+    padding: 20px;
+    box-sizing: border-box;
+    font-family: monospace;
+    position: relative;
+}
+
+.recibo-popup .cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.recibo-popup .agua-paz {
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.recibo-popup .recibo-num {
+    font-size: 16px;
+    text-align: right; /* Align to the right */
+}
+
+.recibo-popup .linha {
+    margin: 10px 0;
+}
+
+.recibo-popup .assinatura {
+    margin-top: 10px;
+    text-align: right;
+    position: relative; /* Adicionado para posicionamento do carimbo */
+}
+/* Estilo para o texto "Assinatura e carimbo" */
+.recibo-popup .assinatura span {
+    font-weight: bold; /* Deixar o texto em negrito */
+    font-size: 1rem; /* Pode ajustar o tamanho da fonte */
+}
+
+
+.recibo-popup .assinatura-maquina {
+    margin-top: 30px;
+    font-size: 14px;
+}
+
+.recibo-popup .checklist {
+    margin-top: 10px;
+    text-align: left;
+}
+/* Estilo para o texto "Forma de pagamento" */
+.recibo-popup .checklist span.payment-form-header {
+    font-weight: bold; /* Deixar o texto em negrito */
+    font-size: 1rem; /* Pode ajustar o tamanho da fonte */
+}
+
+
+.recibo-popup .assinatura-checklist-container {
+    display: flex;
+    flex-direction: row; /* Change to row for side-by-side */
+    justify-content: space-between; /* Pushes items to the ends */
+    align-items: flex-start; /* Aligns them to the top of the container */
+    margin-top: 30px;
+}
+
+.recibo-popup .checklist,
+.recibo-popup .assinatura {
+    width: 48%; /* Give them approximately half width to sit side-by-side */
+    margin-bottom: 0; /* Remove bottom margin when side-by-side */
+}
+.recibo-popup .assinatura {
+    text-align: right; /* Align signature text to the right */
+}
+
+/* Novo estilo para o topo da seção de pagamento/assinatura no recibo */
+.recibo-popup .receipt-top-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Alinhar o texto com a parte de baixo */
+    margin-bottom: 10px; /* Espaço entre o cabeçalho e os checkboxes */
+    font-weight: bold; /* Deixar o texto em negrito */
+}
+.recibo-popup .receipt-top-info .assinatura-header {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+
+.fill-underline {
+    font-family: monospace;
+    white-space: pre; /* Preserve whitespace for underscores */
+    text-decoration: none; /* Remove default underline if any */
+    display: inline-flex; /* Use inline-flex for content centering */
+    align-items: center; /* Center content vertically */
+    justify-content: center; /* Center content horizontally */
+    min-width: 50px; /* Minimum width for the filled area */
+    border-bottom: 1px solid black; /* Simulate underline with border */
+    box-sizing: border-box; /* Include padding/border in width */
+    padding: 0 2px; /* Small padding to prevent text from touching border */
+}
+
+/* New style to hide underscores if data fills the space */
+.fill-underline.no-underline {
+    border-bottom: none;
+    text-decoration: none;
+}
+
+/* Custom styles for receipt data */
+.data-field-blue {
+    color: blue;
+}
+.data-field-red {
+    color: red;
+}
+.data-field-yellow {
+    color: orange; /* ALTERADO para laranja */
+    font-weight: bold; 
+    font-size: 1.05em; /* Aumentado 5% */
+}
+.no-underline-month {
+    text-decoration: none !important;
+    border-bottom: none !important;
+}
+
+/* Estilo para a imagem do carimbo */
+.carimbo-overlay {
+    position: absolute;
+    top: 13.9px; /* MODIFICADO: Posição vertical original -42.8px + 1.5cm (56.7px) */
+    left: 50%; /* Centraliza horizontalmente */
+    transform: translateX(-50%); /* Ajuste fino para centralizar */
+    width: 434px; /* ALTERADO: Original 510px - 15% */
+    height: auto;
+    opacity: 0.8; /* Opacidade para simular carimbo */
+    z-index: 10; /* Garante que fique acima da linha */
+    margin-left: 196.56px; /* ALTERADO: Original 64.26px + 132.3px (3.5cm para a direita) */
+}
+
+
+/* --- RESPONSIVIDADE --- */
+
+/* Pequenas telas (smartphones) */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.2rem;
+        padding-left: 0.5rem;
+    }
+    header button {
+        margin-right: 0.5rem;
+    }
+    
+    #app {
+        padding: 0.5rem;
+    }
+
+    main section {
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    /* --- INÍCIO ALTERAÇÃO --- */
+    /* Ajustar o cabeçalho da vista de recibos para empilhar em telas pequenas */
+     #receipts-view .receipts-header-controls {
+        flex-direction: column;
+        align-items: stretch; /* Fazer os itens ocuparem a largura total */
+        gap: 15px; /* Adicionar espaço entre os grupos de controlo */
+    }
+
+    #receipts-view .receipts-header-controls .id-range-filter {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    #receipts-view .receipts-header-controls .id-range-filter input {
+        width: 100%; /* Ocupar toda a largura */
+    }
+    /* --- FIM ALTERAÇÃO --- */
+
+    /* Search input on top of tables */
+    #clients-view div, #payments-view div, #invoices-view div {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    #client-search-clients, #client-search-payments, #invoice-search {
+        width: 100% !important; /* Override inline style */
+        margin-top: 10px;
+    }
+
+    /* Adjust button padding and font for smaller screens */
+    button, .button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+    .actions-cell .action-buttons button {
+        padding: 0.4rem;
+        font-size: 0.75rem;
+    }
+
+    /* Receipts container */
+    #receipts-container {
+        padding: 0.5rem;
+    }
+
+    .recibo-popup .cabecalho {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+    .recibo-popup .recibo-num {
+        text-align: left;
+        margin-top: 10px;
+    }
+    .recibo-popup .assinatura-checklist-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .recibo-popup .checklist,
+    .recibo-popup .assinatura {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    .recibo-popup .assinatura {
+        text-align: left; /* Align signature left when stacked */
+    }
+    .carimbo-overlay {
+        top: auto !important; /* Reset top for mobile view */
+        bottom: -76.7px; /* MODIFICADO: Posição relativa -20px - 1.5cm (56.7px) */
+        left: 142.3px !important; /* ALTERADO: Original 10px + 132.3px (3.5cm) para a direita */
+        transform: translateX(0) !important;
+        width: 255px !important; /* ALTERADO: Original 300px - 15% */
+        margin-left: 0 !important;
+    }
+    /* Adjust for stacked layout on small screens */
+    .recibo-popup .receipt-top-info {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 5px;
+    }
+    .recibo-popup .receipt-top-info .assinatura-header {
+        margin-top: 10px; /* Add space when stacked */
+    }
+}
+
+/* Médias telas (tablets) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    aside {
+        width: 280px;
+        transform: translateX(-280px);
+    }
+    aside.open {
+        transform: translateX(0);
+    }
+    #app {
+        padding: 1rem;
+    }
+    main section {
+        padding: 1.2rem;
+    }
+}
+
+/* Telas grandes (desktops) */
+@media (min-width: 1025px) {
+    #app {
+        display: block; /* Revert to block for desktop */
+    }
+    aside {
+        position: fixed; /* Keep fixed for overlay behavior */
+        width: 300px; /* Original width */
+        transform: translateX(-300px); /* Original transform */
+    }
+    aside.open {
+        transform: translateX(0);
+    }
+    /* Restore original flex for signature/checklist for larger screens */
+    .recibo-popup .assinatura-checklist-container {
+        flex-direction: row;
+    }
+    .recibo-popup .checklist,
+    .recibo-popup .assinatura {
+        width: 48%;
+        margin-bottom: 0;
+    }
+    .recibo-popup .assinatura {
+        text-align: right;
+    }
+    .carimbo-overlay {
+        top: 13.9px !important; /* MODIFICADO: Posição revertida -42.8px + 1.5cm (56.7px) */
+        left: 50% !important; /* Revert to original position */
+        transform: translateX(-50%) !important;
+        width: 434px !important; /* ALTERADO: Original 510px - 15% */
+        margin-left: 196.56px !important; /* ALTERADO: Original 64.26px + 132.3px (3.5cm para a direita) */
+    }
+}
