@@ -2,8 +2,8 @@
 const CONFIG = {
   VERIFICATION_CODE: '123456a',
   TARIFAS: {
-    CONSUMO_MINIMO: 375,
-    VALOR_M3: 75,
+    CONSUMO_MINIMO: 350,
+    VALOR_M3: 70,
     LIMITE_CONSUMO_MINIMO: 5
   },
   LOCAL_STORAGE_KEY: 'waterManagementData',
@@ -22,10 +22,10 @@ const DOM = {
   adminActions: document.getElementById('admin-actions'),
   authForm: document.getElementById('auth-form'),
   verificationCodeInput: document.getElementById('verification-code'),
-  
+
   // Views
   views: document.querySelectorAll('main > section'),
-  
+
   // Modal Cliente
   clientModal: document.getElementById('client-modal'),
   closeClientModalButton: document.getElementById('close-client-modal-button'),
@@ -35,19 +35,19 @@ const DOM = {
   clientNameInput: document.getElementById('client-name'),
   clientContactInput: document.getElementById('client-contact'),
   clientConnectionDateInput: document.getElementById('client-connection-date'),
-  
+
   // Tabela Clientes
   clientsTableBody: document.getElementById('clients-table-body'),
   clientSearchClients: document.getElementById('client-search-clients'),
-  
+
   // Faturas
   invoicesTableBody: document.getElementById('invoices-table-body'),
   invoiceSearch: document.getElementById('invoice-search'),
-  
+
   // Pagamentos
   paymentsTableBody: document.getElementById('payments-table-body'),
   clientSearchPayments: document.getElementById('client-search-payments'),
-  
+
   // Contratos
   contractsTableBody: document.getElementById('contracts-table-body'),
   contractModal: document.getElementById('contract-modal'),
@@ -57,7 +57,7 @@ const DOM = {
   contractIdInput: document.getElementById('contract-id'),
   contractClientSelect: document.getElementById('contract-client-select'),
   contractValueInput: document.getElementById('contract-value'),
-  
+
   // Recibos
   receiptsContainer: document.getElementById('receipts-container'),
   newMonthButton: document.getElementById('new-month-button'),
@@ -65,15 +65,15 @@ const DOM = {
   clientStartIdInput: document.getElementById('client-start-id'),
   clientEndIdInput: document.getElementById('client-end-id'),
   generateReceiptsByRangeButton: document.getElementById('generate-receipts-by-range-button'),
-  
+
   // Importação
   importInvoiceButton: document.getElementById('import-invoice-data-button'),
   importInvoiceFileInput: document.getElementById('import-invoice-file-input'),
   importFileInput: document.getElementById('import-file-input'),
-  
+
   // Exportação
   exportReadingsButton: null, // Será criado dinamicamente
-  
+
   // Mensagens
   messagesView: document.getElementById('messages-view'),
   messagesTableBody: document.getElementById('messages-table-body'),
@@ -102,7 +102,7 @@ let originalCellValue = null;
 class Utils {
   static formatDate(date, format = 'DISPLAY') {
     if (!date) return '';
-    
+
     try {
       const d = new Date(date);
       if (format === 'DISPLAY') {
@@ -118,21 +118,21 @@ class Utils {
       return '';
     }
   }
-  
+
   static parseNumber(value) {
     if (typeof value === 'number') return value;
     if (!value) return 0;
-    
+
     try {
       let cleanValue = String(value).trim();
-      
+
       // Remove espaços
       cleanValue = cleanValue.replace(/\s/g, '');
-      
+
       // Se a string contém vírgula e ponto, remove os pontos (separadores de milhar) e troca a vírgula por ponto
       if (cleanValue.includes(',') && cleanValue.includes('.')) {
         cleanValue = cleanValue.replace(/\./g, '').replace(',', '.');
-      } 
+      }
       // Se a string contém vírgula e não contém ponto, troca a vírgula por ponto
       else if (cleanValue.includes(',') && !cleanValue.includes('.')) {
         cleanValue = cleanValue.replace(',', '.');
@@ -145,7 +145,7 @@ class Utils {
         }
         // Caso contrário, assume que o ponto é separador decimal e não faz nada
       }
-      
+
       const parsed = parseFloat(cleanValue);
       return isNaN(parsed) ? 0 : parsed;
     } catch (error) {
@@ -153,39 +153,39 @@ class Utils {
       return 0;
     }
   }
-  
+
   static validateClientData(client) {
     const errors = [];
-    
+
     if (!client.name || client.name.trim().length < 2) {
       errors.push('Nome inválido (mínimo 2 caracteres)');
     }
-    
+
     if (!client.contact || !/^8[0-9]{8}$/.test(String(client.contact).trim())) {
       errors.push('Contacto inválido (formato: 8XXXXXXXX)');
     }
-    
+
     if (!client.connectionDate) {
       errors.push('Data de ligação obrigatória');
     }
-    
+
     return errors;
   }
-  
+
   static generateUniqueId(existingIds) {
     if (!existingIds || existingIds.length === 0) return 1;
     const maxId = Math.max(...existingIds);
     return maxId + 1;
   }
-  
+
   static debounce(fn, delay) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
       clearTimeout(timeout);
       timeout = setTimeout(() => fn.apply(this, args), delay);
     };
   }
-  
+
   static generateRandomInvoiceNumber(existingNumbers) {
     let number;
     do {
@@ -193,7 +193,7 @@ class Utils {
     } while (existingNumbers && existingNumbers.has(number));
     return number;
   }
-  
+
   static formatDateForDisplay(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -205,16 +205,16 @@ class Utils {
 class Calculator {
   static calculateInvoice(clientId, invoiceData, clientSituacao) {
     const cacheKey = `invoice_${clientId}_${JSON.stringify(invoiceData)}_${clientSituacao}`;
-    
+
     if (calculationCache.has(cacheKey)) {
       return calculationCache.get(cacheKey);
     }
-    
+
     const invoice = invoiceData || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
     let consumption = 0;
     let tariff = 0;
     let totalToPay = 0;
-    
+
     // Cliente Fechado
     if (clientSituacao === 'F') {
       totalToPay = Utils.parseNumber(invoice.debt);
@@ -233,41 +233,41 @@ class Calculator {
     else {
       const hasNewReading = (invoice.currentReading || 0) > (invoice.prevReading || 0);
       consumption = Math.max(0, (invoice.currentReading || 0) - (invoice.prevReading || 0));
-      
+
       if (hasNewReading) {
-        tariff = consumption <= CONFIG.TARIFAS.LIMITE_CONSUMO_MINIMO 
-          ? CONFIG.TARIFAS.CONSUMO_MINIMO 
+        tariff = consumption <= CONFIG.TARIFAS.LIMITE_CONSUMO_MINIMO
+          ? CONFIG.TARIFAS.CONSUMO_MINIMO
           : consumption * CONFIG.TARIFAS.VALOR_M3;
       }
-      
+
       totalToPay = Utils.parseNumber(invoice.debt) + tariff;
     }
-    
+
     // Valor personalizado sobrepõe cálculo
     if (invoice.customAmount != null) {
       totalToPay = Utils.parseNumber(invoice.customAmount);
     }
-    
+
     const result = { consumption, tariff, totalToPay };
     calculationCache.set(cacheKey, result);
-    
+
     return result;
   }
-  
+
   static calculatePayments(paymentData) {
     const payments = paymentData || { p1: { amount: 0 }, p2: { amount: 0 }, p3: { amount: 0 } };
-    const totalPaid = (payments.p1.amount || 0) + 
-                     (payments.p2.amount || 0) + 
-                     (payments.p3.amount || 0);
+    const totalPaid = (payments.p1.amount || 0) +
+      (payments.p2.amount || 0) +
+      (payments.p3.amount || 0);
     return totalPaid;
   }
-  
+
   static calculateContractTotals(contract) {
     if (!contract) return { totalPaid: 0, remaining: 0 };
-    
+
     const totalPaid = (contract.payments.p1.amount || 0) +
-                     (contract.payments.p2.amount || 0) +
-                     (contract.payments.p3.amount || 0);
+      (contract.payments.p2.amount || 0) +
+      (contract.payments.p3.amount || 0);
     const remaining = contract.value - totalPaid;
     return { totalPaid, remaining };
   }
@@ -275,9 +275,9 @@ class Calculator {
 
 // ================ AUTENTICAÇÃO ================
 class AuthService {
-  static requestVerification(onSuccess, onFail = () => {}) {
+  static requestVerification(onSuccess, onFail = () => { }) {
     const code = prompt("Para realizar esta ação, por favor, insira o código de verificação:");
-    
+
     if (code === CONFIG.VERIFICATION_CODE) {
       isAuthenticated = true;
       onSuccess();
@@ -288,7 +288,7 @@ class AuthService {
       onFail();
     }
   }
-  
+
   static requireAuthentication(onSuccess) {
     if (isAuthenticated) {
       onSuccess();
@@ -310,20 +310,20 @@ class DataManager {
       alert('Erro ao salvar dados. Verifique o espaço disponível.');
     }
   }
-  
+
   static load() {
     try {
       const data = localStorage.getItem(CONFIG.LOCAL_STORAGE_KEY);
-      
+
       if (data) {
         state = JSON.parse(data);
-        
+
         // Migração de dados antigos
         this.migrateOldData();
-        
+
         // Garantir estrutura correta
         this.ensureDataStructure();
-        
+
         console.log('Dados carregados com sucesso');
       } else {
         this.createDefaultData();
@@ -334,7 +334,7 @@ class DataManager {
       this.createDefaultData();
     }
   }
-  
+
   static migrateOldData() {
     // Migrar clientes
     state.clients.forEach(client => {
@@ -345,21 +345,21 @@ class DataManager {
         client.situationChangeDate = null;
       }
     });
-    
+
     // Migrar pagamentos
     for (const clientId in state.payments) {
       ['p1', 'p2', 'p3'].forEach(p => {
         if (state.payments[clientId][p] === undefined) {
           state.payments[clientId][p] = { amount: 0, date: null };
         } else if (typeof state.payments[clientId][p] === 'number') {
-          state.payments[clientId][p] = { 
-            amount: state.payments[clientId][p], 
-            date: null 
+          state.payments[clientId][p] = {
+            amount: state.payments[clientId][p],
+            date: null
           };
         }
       });
     }
-    
+
     // Migrar contratos
     for (const contractId in state.contracts) {
       ['p1', 'p2', 'p3'].forEach(p => {
@@ -368,13 +368,13 @@ class DataManager {
         }
       });
     }
-    
+
     // Garantir ordem dos recibos
     if (!state.receiptOrder || !Array.isArray(state.receiptOrder) || state.receiptOrder.length === 0) {
       state.receiptOrder = [10, 16, 113, 42, 21, 23, 15, 72, 76, 65, 30, 55, 52, 94, 83, 116, 51, 48, 100, 88, 118, 114, 33, 121, 7, 13, 102, 95, 111, 133, 99, 108, 126, 124, 110, 130, 67, 71, 29, 50, 112, 97, 117, 120, 92, 107, 77, 63, 6, 2, 68, 1, 73, 17, 25, 9, 132, 20, 69, 11, 134, 98, 104, 62, 82, 128, 37, 93, 57, 119, 18, 24, 125, 90, 129, 8, 3, 26, 58, 61, 80, 137, 44];
     }
   }
-  
+
   static ensureDataStructure() {
     if (!state.clients) state.clients = [];
     if (!state.invoices) state.invoices = {};
@@ -382,7 +382,7 @@ class DataManager {
     if (!state.contracts) state.contracts = {};
     if (!state.receiptOrder) state.receiptOrder = [];
   }
-  
+
   static createDefaultData() {
     state = {
       clients: [
@@ -396,35 +396,35 @@ class DataManager {
         3: { prevReading: 7, currentReading: 7, debt: 525, customAmount: null }
       },
       payments: {
-        1: { p1: { amount: 375, date: '2025-05-26T10:00:00.000Z' }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } },
-        2: { p1: { amount: 600, date: '2025-05-26T11:00:00.000Z' }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } },
+        1: { p1: { amount: 350, date: '2025-05-26T10:00:00.000Z' }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } },
+        2: { p1: { amount: 560, date: '2025-05-26T11:00:00.000Z' }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } },
         3: { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } }
       },
       contracts: {},
       receiptOrder: [10, 16, 113, 42, 21, 23, 15, 72, 76, 65, 30, 55, 52, 94, 83, 116, 51, 48, 100, 88, 118, 114, 33, 121, 7, 13, 102, 95, 111, 133, 99, 108, 126, 124, 110, 130, 67, 71, 29, 50, 112, 97, 117, 120, 92, 107, 77, 63, 6, 2, 68, 1, 73, 17, 25, 9, 132, 20, 69, 11, 134, 98, 104, 62, 82, 128, 37, 93, 57, 119, 18, 24, 125, 90, 129, 8, 3, 26, 58, 61, 80, 137, 44]
     };
   }
-  
+
   static exportDataToFile() {
     AuthService.requestVerification(() => {
       try {
         const dataStr = JSON.stringify(state, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        
+
         const today = new Date().toISOString().slice(0, 10);
         a.download = `backup_gestao_aguas_${today}.json`;
-        
+
         document.body.appendChild(a);
         a.click();
-        
+
         URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
+
         alert('Backup dos dados exportado com sucesso!');
       } catch (error) {
         console.error('Erro ao exportar dados:', error);
@@ -432,24 +432,24 @@ class DataManager {
       }
     });
   }
-  
+
   static importDataFromFile(event) {
     AuthService.requireAuthentication(() => {
       const file = event.target.files[0];
       if (!file) return;
-      
+
       if (!confirm('Tem a certeza que deseja importar este ficheiro? Esta ação irá substituir TODOS os dados atuais e não pode ser desfeita.')) {
         event.target.value = null;
         return;
       }
-      
+
       const reader = new FileReader();
-      
-      reader.onload = function(e) {
+
+      reader.onload = function (e) {
         try {
           const content = e.target.result;
           const importedState = JSON.parse(content);
-          
+
           if (importedState.clients && importedState.invoices && importedState.payments && importedState.contracts) {
             state = importedState;
             DataManager.migrateOldData();
@@ -466,40 +466,40 @@ class DataManager {
           event.target.value = null;
         }
       };
-      
-      reader.onerror = function() {
+
+      reader.onerror = function () {
         alert('Ocorreu um erro ao ler o ficheiro.');
         event.target.value = null;
       };
-      
+
       reader.readAsText(file);
     });
   }
-  
+
   static importInvoiceDataFromFile(event) {
     AuthService.requireAuthentication(() => {
       const file = event.target.files[0];
       if (!file) return;
-      
+
       // Verificar extensão do ficheiro
       const fileName = file.name.toLowerCase();
       const isTXT = fileName.endsWith('.txt');
       const isCSV = fileName.endsWith('.csv');
-      
+
       if (!isTXT && !isCSV) {
         alert('Formato de ficheiro não suportado. Por favor, selecione um ficheiro .txt ou .csv.');
         event.target.value = null;
         return;
       }
-      
+
       if (!confirm('Tem a certeza que deseja importar este ficheiro de leituras? Esta ação irá atualizar as leituras atuais dos clientes.')) {
         event.target.value = null;
         return;
       }
-      
+
       const reader = new FileReader();
-      
-      reader.onload = function(e) {
+
+      reader.onload = function (e) {
         try {
           const content = e.target.result;
           const lines = content.split('\n');
@@ -507,24 +507,24 @@ class DataManager {
           let errorCount = 0;
           let skippedClients = 0;
           let skippedHeader = false;
-          
-        // Para armazenar mensagens detalhadas de erro
+
+          // Para armazenar mensagens detalhadas de erro
           const errorMessages = [];
           const skippedMessages = [];
-          
+
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const lineNumber = i + 1;
-            
+
             if (line.trim() === '') continue;
-            
+
             // Detectar separador
             const separator = isTXT ? ';' : ',';
-            
+
             // Limpar linha
             const cleanLine = line.trim().replace(/["']/g, '');
             let parts = cleanLine.split(separator);
-            
+
             // Tentar com tabulação se necessário
             if (parts.length < 3) {
               const tabParts = cleanLine.split('\t');
@@ -532,31 +532,31 @@ class DataManager {
                 parts = tabParts;
               }
             }
-            
+
             // VERIFICAÇÃO: Só importar se tiver pelo menos 3 valores
             if (parts.length < 3) {
               errorMessages.push(`Linha ${lineNumber}: Formato inválido - menos de 3 valores encontrados.`);
               errorCount++;
               continue;
             }
-            
+
             // Pular cabeçalho na primeira linha
             if (!skippedHeader && isNaN(Utils.parseNumber(parts[0]))) {
               skippedHeader = true;
               console.log('Cabeçalho detectado e ignorado:', line);
               continue;
             }
-            
+
             const clientId = parseInt(parts[0].trim());
             const totalM3 = Utils.parseNumber(parts[1]);
             const totalValue = Utils.parseNumber(parts[2]);
-            
+
             if (isNaN(clientId) || clientId <= 0) {
               errorMessages.push(`Linha ${lineNumber}: ID de cliente inválido (${parts[0]})`);
               errorCount++;
               continue;
             }
-            
+
             // Verificar se o cliente existe
             const client = state.clients.find(c => c.id === clientId);
             if (!client) {
@@ -564,52 +564,52 @@ class DataManager {
               errorCount++;
               continue;
             }
-            
+
             // VERIFICAÇÃO: Se a situação do cliente for F, ignorar
             if (client.situacao === 'F') {
               skippedMessages.push(`Cliente ${clientId} ignorado: Situação Fechado`);
               skippedClients++;
               continue;
             }
-            
+
             // Verificar se a leitura importada é menor que a leitura anterior do site
-            const currentInvoice = state.invoices[clientId] || { 
-              prevReading: 0, 
-              currentReading: 0, 
-              debt: 0, 
-              customAmount: null 
+            const currentInvoice = state.invoices[clientId] || {
+              prevReading: 0,
+              currentReading: 0,
+              debt: 0,
+              customAmount: null
             };
             const sitePreviousReading = currentInvoice.currentReading || 0;
-            
+
             if (totalM3 < sitePreviousReading) {
               skippedMessages.push(`Cliente ${clientId} ignorado: Leitura importada (${totalM3}) menor que a leitura anterior (${sitePreviousReading})`);
               skippedClients++;
               continue;
             }
-            
+
             // VERIFICAÇÃO: Se já tem leitura atual e é igual à importada, ignorar
             if (totalM3 === sitePreviousReading) {
               skippedMessages.push(`Cliente ${clientId} ignorado: Leitura já existe (${totalM3})`);
               skippedClients++;
               continue;
             }
-            
+
             // Atualizar fatura
             if (!state.invoices[clientId]) {
-              state.invoices[clientId] = { 
-                prevReading: 0, 
-                currentReading: 0, 
-                debt: 0, 
-                customAmount: null 
+              state.invoices[clientId] = {
+                prevReading: 0,
+                currentReading: 0,
+                debt: 0,
+                customAmount: null
               };
             }
-            
+
             // Manter a dívida atual, não zerar
             const currentDebt = currentInvoice.debt || 0;
-            
+
             // Preservar a leitura anterior do site
             const prevReading = sitePreviousReading;
-            
+
             if (totalValue > 0) {
               // Tem valor total no arquivo - usar valor total diretamente
               state.invoices[clientId] = {
@@ -622,12 +622,12 @@ class DataManager {
               // Não tem valor total no arquivo - calcular usando leitura
               const consumption = Math.max(0, totalM3 - prevReading);
               let tariff = 0;
-              
+
               if (client.situacao === 'A') {
                 // Cliente Aberto: calcular tarifa normal
                 if (consumption > 0) {
-                  tariff = consumption <= CONFIG.TARIFAS.LIMITE_CONSUMO_MINIMO 
-                    ? CONFIG.TARIFAS.CONSUMO_MINIMO 
+                  tariff = consumption <= CONFIG.TARIFAS.LIMITE_CONSUMO_MINIMO
+                    ? CONFIG.TARIFAS.CONSUMO_MINIMO
                     : consumption * CONFIG.TARIFAS.VALOR_M3;
                 } else if (totalM3 === prevReading) {
                   // Consumo zero: aplicar consumo mínimo
@@ -637,7 +637,7 @@ class DataManager {
                 // Cliente Não: usar dívida atual
                 tariff = currentDebt;
               }
-              
+
               state.invoices[clientId] = {
                 prevReading: prevReading,
                 currentReading: totalM3,
@@ -645,20 +645,20 @@ class DataManager {
                 customAmount: null // Deixar cálculo normal
               };
             }
-            
+
             importedCount++;
           }
-          
+
           DataManager.save();
           UIManager.renderInvoicesTable();
           UIManager.renderPaymentsTable();
-          
+
           // Montar mensagem detalhada
           let message = `Importação concluída!\n\n`;
           message += `✅ ${importedCount} clientes atualizados.\n`;
           message += `⏭️ ${skippedClients} clientes ignorados.\n`;
           message += `❌ ${errorCount} erros encontrados.\n\n`;
-          
+
           if (skippedMessages.length > 0) {
             message += `Clientes ignorados:\n`;
             if (skippedMessages.length <= 5) {
@@ -669,7 +669,7 @@ class DataManager {
             }
             message += `\n`;
           }
-          
+
           if (errorMessages.length > 0) {
             message += `Erros encontrados:\n`;
             if (errorMessages.length <= 5) {
@@ -679,9 +679,9 @@ class DataManager {
               message += `  • ... e mais ${errorMessages.length - 5} erros\n`;
             }
           }
-          
+
           alert(message);
-          
+
         } catch (error) {
           console.error('Erro ao importar o ficheiro:', error);
           alert(`Erro: O ficheiro selecionado não está no formato correto.\n\nDetalhes:\n${error.message}\n\nFormatos aceites:\n- TXT: número_cliente;leitura_atual;valor_total\n- CSV: número_cliente,leitura_atual,valor_total\n\nNota: Linhas com menos de 3 valores serão ignoradas.`);
@@ -689,25 +689,25 @@ class DataManager {
           event.target.value = null;
         }
       };
-      
-      reader.onerror = function() {
+
+      reader.onerror = function () {
         alert('Ocorreu um erro ao ler o ficheiro.');
         event.target.value = null;
       };
-      
+
       reader.readAsText(file, 'UTF-8');
     });
   }
-  
+
   static exportReadingsToCSV() {
     AuthService.requestVerification(() => {
       try {
         let csvContent = "ID Cliente;Nome;Leitura Anterior;Leitura Atual;Consumo (m³);Dívida;Valor a Pagar\n";
-        
+
         state.clients.forEach(client => {
           const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
           const { consumption, totalToPay } = Calculator.calculateInvoice(client.id, invoice, client.situacao);
-          
+
           const row = [
             client.id,
             `"${client.name}"`,
@@ -717,28 +717,28 @@ class DataManager {
             (invoice.debt || 0).toFixed(2).replace('.', ','),
             totalToPay.toFixed(2).replace('.', ',')
           ].join(';');
-          
+
           csvContent += row + "\n";
         });
-        
+
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        
+
         const today = new Date().toISOString().slice(0, 10);
         a.download = `leituras_aguas_${today}.csv`;
-        
+
         document.body.appendChild(a);
         a.click();
-        
+
         URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
+
         alert('Leituras exportadas em formato CSV com sucesso!');
-        
+
       } catch (error) {
         console.error('Erro ao exportar leituras:', error);
         alert('Ocorreu um erro ao tentar exportar as leituras.');
@@ -755,24 +755,24 @@ class UIManager {
     this.renderPaymentsTable();
     this.renderContractsTable();
   }
-  
+
   static renderClientsTable() {
     DOM.clientsTableBody.innerHTML = '';
     const searchTerm = DOM.clientSearchClients.value.toLowerCase();
-    
+
     const filteredClients = state.clients.filter(client => {
       const matchesName = client.name.toLowerCase().includes(searchTerm);
       const matchesId = String(client.id).includes(searchTerm);
       return matchesName || matchesId;
     });
-    
+
     filteredClients.forEach(client => {
       const row = document.createElement('tr');
       row.dataset.clientId = client.id;
       const situacao = client.situacao || 'A';
       const situationChangeDate = client.situationChangeDate || '';
       const formattedDate = situationChangeDate ? Utils.formatDateForDisplay(situationChangeDate) : '';
-      
+
       row.innerHTML = `
         <td>${client.id}</td>
         <td>${client.name}</td>
@@ -798,30 +798,30 @@ class UIManager {
       DOM.clientsTableBody.appendChild(row);
     });
   }
-  
+
   static renderInvoicesTable() {
     DOM.invoicesTableBody.innerHTML = '';
     const searchTerm = DOM.invoiceSearch.value.toLowerCase();
-    
+
     state.clients.forEach(client => {
       const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
       const { consumption, totalToPay } = Calculator.calculateInvoice(client.id, invoice, client.situacao);
       const isFechadoOuNao = client.situacao === 'F' || client.situacao === 'N';
-      
-      const prevReadingAttrs = isFechadoOuNao 
-        ? `class="read-only-input" title="Não editável (Situação: ${client.situacao})"` 
+
+      const prevReadingAttrs = isFechadoOuNao
+        ? `class="read-only-input" title="Não editável (Situação: ${client.situacao})"`
         : '';
-      const currentReadingAttrs = isFechadoOuNao 
+      const currentReadingAttrs = isFechadoOuNao
         ? `class="read-only-input" title="Não editável (Situação: ${client.situacao})"`
         : `contenteditable="true" title="Insira a nova leitura aqui"`;
-      
+
       const matchesName = client.name.toLowerCase().includes(searchTerm);
       const matchesId = String(client.id).includes(searchTerm);
-      
+
       if (matchesName || matchesId) {
         const debtValue = Utils.parseNumber(invoice.debt);
         const debtClass = debtValue > 1124 ? 'text-danger' : '';
-        
+
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${client.id}</td>
@@ -836,26 +836,26 @@ class UIManager {
       }
     });
   }
-  
+
   static renderPaymentsTable() {
     DOM.paymentsTableBody.innerHTML = '';
     const searchTerm = DOM.clientSearchPayments.value.toLowerCase();
-    
+
     const filteredClients = state.clients.filter(client => {
       const matchesName = client.name.toLowerCase().includes(searchTerm);
       const matchesId = String(client.id).includes(searchTerm);
       return matchesName || matchesId;
     });
-    
+
     filteredClients.forEach(client => {
       const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
       const { totalToPay } = Calculator.calculateInvoice(client.id, invoice, client.situacao);
       const payment = state.payments[client.id] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
       const totalPaid = Calculator.calculatePayments(payment);
       const remaining = totalToPay - totalPaid;
-      
+
       const row = document.createElement('tr');
-      
+
       row.innerHTML = `
         <td>${client.id}</td>
         <td>${client.name}</td>
@@ -880,18 +880,18 @@ class UIManager {
       DOM.paymentsTableBody.appendChild(row);
     });
   }
-  
+
   static renderContractsTable() {
     DOM.contractsTableBody.innerHTML = '';
     Object.keys(state.contracts).forEach(contractId => {
       const contract = state.contracts[contractId];
       const client = state.clients.find(c => c.id == contract.clientId);
       if (!client) return;
-      
+
       const { totalPaid, remaining } = Calculator.calculateContractTotals(contract);
-      
+
       const row = document.createElement('tr');
-      
+
       row.innerHTML = `
         <td>${contract.id}</td>
         <td>${client.id}</td>
@@ -918,17 +918,17 @@ class UIManager {
       DOM.contractsTableBody.appendChild(row);
     });
   }
-  
+
   static renderMessagesTable() {
     DOM.messagesTableBody.innerHTML = '';
     DOM.messagesOutput.style.display = 'none';
     DOM.messagesList.innerHTML = '';
     DOM.selectAllCheckbox.checked = false;
-    
+
     state.clients.forEach(client => {
       const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
       const { totalToPay } = Calculator.calculateInvoice(client.id, invoice, client.situacao);
-      
+
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>
@@ -944,44 +944,44 @@ class UIManager {
       DOM.messagesTableBody.appendChild(row);
     });
   }
-  
+
   static renderReceipts(startId = null, endId = null) {
     DOM.receiptsContainer.innerHTML = '';
     const generatedInvoiceNumbers = new Set();
-    
+
     const currentDate = new Date();
     const monthName = currentDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
     const year = currentDate.getFullYear();
-    
+
     const customOrder = state.receiptOrder || [];
     const customOrderSet = new Set(customOrder);
-    
+
     const allActiveClients = state.clients.filter(client => client.situacao === 'A');
-    
+
     const prioritizedClients = [];
     const otherClients = [];
-    
+
     customOrder.forEach(id => {
       const client = allActiveClients.find(c => c.id === id);
       if (client) {
         prioritizedClients.push(client);
       }
     });
-    
+
     allActiveClients.forEach(client => {
       if (!customOrderSet.has(client.id)) {
         otherClients.push(client);
       }
     });
-    
+
     otherClients.sort((a, b) => a.id - b.id);
     let sortedClients = [...prioritizedClients, ...otherClients];
-    
+
     let clientsToPrint = sortedClients;
     if (startId !== null && endId !== null) {
       clientsToPrint = sortedClients.filter(client => client.id >= startId && client.id <= endId);
     }
-    
+
     if (clientsToPrint.length === 0 && (startId !== null || endId !== null)) {
       DOM.receiptsContainer.innerHTML = '<p>Nenhuma factura de cliente ATIVO encontrada para o intervalo de IDs especificado.</p>';
       return;
@@ -989,23 +989,23 @@ class UIManager {
       DOM.receiptsContainer.innerHTML = '<p>Nenhum cliente ativo para gerar facturas.</p>';
       return;
     }
-    
+
     clientsToPrint.forEach((client, index) => {
       const invoiceNumber = Utils.generateRandomInvoiceNumber(generatedInvoiceNumbers);
       generatedInvoiceNumbers.add(invoiceNumber);
-      
+
       const invoice = state.invoices[client.id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
       const payment = state.payments[client.id] || { p1: { amount: 0 }, p2: { amount: 0 }, p3: { amount: 0 } };
       const { totalToPay } = Calculator.calculateInvoice(client.id, invoice, client.situacao);
       const totalPaid = Calculator.calculatePayments(payment);
-      
+
       const valorEmFalta = totalToPay - totalPaid;
       const debtForReceipt = valorEmFalta;
       const debtClassForReceipt = debtForReceipt > 1124 ? 'text-danger' : '';
-      
+
       const prevReadingForReceipt = invoice.prevReading || 0;
       const counterNumber = String(client.id).padStart(3, '0');
-      
+
       const receiptHTML = `
       <div class="receipt">
         <div class="receipt-header">
@@ -1023,7 +1023,7 @@ class UIManager {
             Para efeitos e fins julgados convenientes, declaramos que a fatura do(a) Sr(a).<span class="data-field data-field-blue">${client.name}</span>
             residente na casa nº <span class="data-field">___________</span>
             tem de pagar a quantia de <span class="data-field">__________</span> MZN
-            o valor do consumo mínimo é de 375MZN.
+            o valor do consumo mínimo é de 350MZN.
           </p>
           <table>
             <thead>
@@ -1040,7 +1040,7 @@ class UIManager {
                 <td><span class="data-field">${prevReadingForReceipt}</span></td>
                 <td><span class="data-field"></span></td>
                 <td><span class="data-field"></span></td>
-                <td><span class="data-field">75.00 MZN</span></td>
+                <td><span class="data-field">70.00 MZN</span></td>
                 <td>Leitura</td>
                 <td><span class="data-field"></span> MZN</td>
               </tr>
@@ -1059,10 +1059,10 @@ class UIManager {
         </div>
       </div>`;
       DOM.receiptsContainer.innerHTML += receiptHTML;
-      
+
       const position = index + 1;
       const isLastOverall = position === clientsToPrint.length;
-      
+
       if (!isLastOverall && (position % 3 !== 0)) {
         DOM.receiptsContainer.innerHTML += '<hr class="invoice-divider">';
       }
@@ -1077,7 +1077,7 @@ class ReceiptManager {
     const teens = ['dez', 'onze', 'treze', 'catorze', 'quinze', 'dezasseis', 'dezassete', 'dezoito', 'dezanove'];
     const tens = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
     const hundreds = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
-    
+
     function convertGroup(n) {
       if (n === 0) return '';
       if (n < 10) return units[n];
@@ -1096,18 +1096,18 @@ class ReceiptManager {
       }
       return '';
     }
-    
+
     if (num === 0) return 'zero';
-    
+
     let integerPart = Math.floor(num);
     let decimalPart = Math.round((num - integerPart) * 100);
-    
+
     let result = '';
     let hundredsGroup = Math.floor(integerPart % 1000);
     let thousandsGroup = Math.floor((integerPart / 1000) % 1000);
     let millionsGroup = Math.floor((integerPart / 1000000) % 1000);
     let billionsGroup = Math.floor(integerPart / 1000000000);
-    
+
     if (billionsGroup > 0) {
       result += convertGroup(billionsGroup) + ' mil milhões ';
     }
@@ -1120,24 +1120,24 @@ class ReceiptManager {
     if (hundredsGroup > 0 || (integerPart === 0 && decimalPart === 0)) {
       result += convertGroup(hundredsGroup);
     }
-    
+
     let fullResult = result.trim();
-    
+
     if (integerPart === 1 && !fullResult.includes("milhão") && !fullResult.includes("mil milhões")) {
       fullResult += ' Metical';
     } else if (integerPart > 0) {
       fullResult += ' Meticais';
     }
-    
+
     if (decimalPart > 0) {
       const decimalWords = convertGroup(decimalPart);
       const separator = fullResult ? ' e ' : '';
       fullResult += separator + decimalWords + (decimalPart === 1 ? ' centavo' : ' centavos');
     }
-    
+
     return fullResult.charAt(0).toUpperCase() + fullResult.slice(1);
   }
-  
+
   static generateUniqueBinarySignature() {
     let binaryString;
     do {
@@ -1149,17 +1149,17 @@ class ReceiptManager {
     generatedBinarySignatures.add(binaryString);
     return binaryString;
   }
-  
+
   static generateReceipt(clientId, field = null) {
     const client = state.clients.find(c => c.id == clientId);
     if (!client) {
       alert("Cliente não encontrado.");
       return;
     }
-    
+
     const payment = state.payments[clientId] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
     const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
-    
+
     // Se não especificar o campo, encontrar o último pagamento com valor
     if (!field) {
       if (payment.p3.amount > 0 && payment.p3.date) {
@@ -1173,81 +1173,81 @@ class ReceiptManager {
         return;
       }
     }
-    
+
     const lastPayment = payment[field];
     if (!lastPayment || lastPayment.amount === 0) {
       alert("Não existe nenhum pagamento registado para este cliente.");
       return;
     }
-    
+
     const lastPaymentAmount = lastPayment.amount;
     const lastPaymentDate = lastPayment.date ? new Date(lastPayment.date) : new Date();
-    
+
     // Calcular o valor total a pagar e o que já foi pago até AGORA (incluindo este pagamento)
     const { totalToPay } = Calculator.calculateInvoice(clientId, invoice, client.situacao);
     const totalPaid = Calculator.calculatePayments(payment); // Soma de todos os pagamentos
-    
+
     // Valor que faltava ANTES deste pagamento específico
     const paidBeforeThis = totalPaid - lastPaymentAmount;
     const valorEmFaltaAntes = Math.max(0, totalToPay - paidBeforeThis);
-    
+
     const receiptDate = lastPaymentDate;
     const day = String(receiptDate.getDate()).padStart(2, '0');
     const receiptMonthText = receiptDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
     const fullYear = String(receiptDate.getFullYear());
-    
+
     const invoiceDate = new Date();
     invoiceDate.setDate(1);
     invoiceDate.setMonth(invoiceDate.getMonth() - 1);
     const invoiceMonthName = invoiceDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
-    
+
     const counterNumber = String(client.id).padStart(3, '0');
     const amountInWords = this.numberToWords(lastPaymentAmount);
-    
+
     // **LÓGICA CORRIGIDA PARA A MENSAGEM DO RECIBO - BASEADA APENAS NO ÚLTIMO PAGAMENTO**
     let receiptText = '';
-    
+
     // Caso 1: Não tinha valor a pagar (0 ou negativo) e fez pagamento
     if (valorEmFaltaAntes <= 0 && lastPaymentAmount > 0) {
-        // Valor que faltava era 0 e cliente faz pagamento adiantado
-        receiptText = 'Referente ao crédito para futura(s) fatura(s) de água, motivo pela qual passamos o presente recibo.';
-    } 
+      // Valor que faltava era 0 e cliente faz pagamento adiantado
+      receiptText = 'Referente ao crédito para futura(s) fatura(s) de água, motivo pela qual passamos o presente recibo.';
+    }
     // Caso 2: Cliente pagou mais do que faltava com este pagamento específico
     else if (lastPaymentAmount > valorEmFaltaAntes && valorEmFaltaAntes > 0) {
-        // Cliente pagou a mais do que faltava
-        const pagamentoFatura = valorEmFaltaAntes;
-        const credito = lastPaymentAmount - valorEmFaltaAntes;
-        receiptText = `Da qual ${pagamentoFatura.toFixed(2)} MT é referente ao pagamento da fatura do mês de ${invoiceMonthName} e ${credito.toFixed(2)} MT créditos \n para futura(s) faturas de água. motivo pela qual passamos o presente recibo.`;
+      // Cliente pagou a mais do que faltava
+      const pagamentoFatura = valorEmFaltaAntes;
+      const credito = lastPaymentAmount - valorEmFaltaAntes;
+      receiptText = `Da qual ${pagamentoFatura.toFixed(2)} MT é referente ao pagamento da fatura do mês de ${invoiceMonthName} e ${credito.toFixed(2)} MT créditos \n para futura(s) faturas de água. motivo pela qual passamos o presente recibo.`;
     }
     // Caso 3: Pagamento incompleto (ainda falta valor após este pagamento)
     else if (lastPaymentAmount < valorEmFaltaAntes && lastPaymentAmount > 0) {
-        // Pagou incompleto - ainda falta valor
-        const valorEmFaltaDepois = valorEmFaltaAntes - lastPaymentAmount;
-        receiptText = `à fatura de consumo de água do mês de ${invoiceMonthName}  tem remanescente o valor ${valorEmFaltaDepois.toFixed(2)} MT. \n motivo pela qual passamos o presente recibo.`;
+      // Pagou incompleto - ainda falta valor
+      const valorEmFaltaDepois = valorEmFaltaAntes - lastPaymentAmount;
+      receiptText = `à fatura de consumo de água do mês de ${invoiceMonthName}  tem remanescente o valor ${valorEmFaltaDepois.toFixed(2)} MT. \n motivo pela qual passamos o presente recibo.`;
     }
     // Caso 4: Pagamento exato do que faltava
     else if (lastPaymentAmount === valorEmFaltaAntes && lastPaymentAmount > 0) {
-        // Pagamento exato do que faltava
-        receiptText = `À fatura de consumo de água do mês de ${invoiceMonthName}, motivo pelo qual passamos o presente recibo.`;
+      // Pagamento exato do que faltava
+      receiptText = `À fatura de consumo de água do mês de ${invoiceMonthName}, motivo pelo qual passamos o presente recibo.`;
     }
     // Caso 5: Outras situações
     else {
-        // Pagamento normal
-        receiptText = `À fatura de consumo de água do mês de ${invoiceMonthName}, motivo pelo qual passamos o presente recibo.`;
+      // Pagamento normal
+      receiptText = `À fatura de consumo de água do mês de ${invoiceMonthName}, motivo pelo qual passamos o presente recibo.`;
     }
-    
+
     const fillWithUnderscores = (text, maxLength) => {
       const currentLength = String(text).length;
       if (currentLength >= maxLength) return String(text);
       return String(text) + '_'.repeat(maxLength - currentLength);
     };
-    
+
     const getUnderlineClass = (text, maxLength) => {
       return String(text).length >= maxLength ? 'no-underline' : '';
     };
-    
+
     const machineSignature = this.generateUniqueBinarySignature();
-    
+
     const createSingleReceiptHTML = () => {
       return `
       <div class="recibo-popup">
@@ -1289,27 +1289,27 @@ class ReceiptManager {
       </div>
       `;
     };
-    
+
     const receiptTitle = `Cliente_${String(client.id).padStart(3, '0')}_${field.toUpperCase()}`;
     this.openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
   }
-  
+
   static generateContractReceipt(contractId) {
     const contract = state.contracts[contractId];
     if (!contract) {
       alert("Contrato não encontrado.");
       return;
     }
-    
+
     const client = state.clients.find(c => c.id == contract.clientId);
     if (!client) {
       alert("Cliente associado ao contrato não encontrado.");
       return;
     }
-    
+
     const payment = contract.payments;
     const { remaining } = Calculator.calculateContractTotals(contract);
-    
+
     let lastPaymentAmount = 0;
     let lastPaymentDate = null;
     if (payment.p3.amount > 0 && payment.p3.date) {
@@ -1322,33 +1322,33 @@ class ReceiptManager {
       lastPaymentAmount = payment.p1.amount;
       lastPaymentDate = new Date(payment.p1.date);
     }
-    
+
     if (lastPaymentAmount === 0) {
       alert("Não existe nenhum pagamento registado para este contrato.");
       return;
     }
-    
+
     const receiptDate = lastPaymentDate || new Date();
     const day = String(receiptDate.getDate()).padStart(2, '0');
     const receiptMonthText = receiptDate.toLocaleString('pt-BR', { month: 'long' }).toUpperCase();
     const fullYear = String(receiptDate.getFullYear());
-    
+
     const counterNumber = String(client.id).padStart(3, '0');
     const amountInWords = this.numberToWords(lastPaymentAmount);
-    
+
     const fillWithUnderscores = (text, maxLength) => {
       const currentLength = String(text).length;
       if (currentLength >= maxLength) return String(text);
       return String(text) + '_'.repeat(maxLength - currentLength);
     };
-    
+
     const getUnderlineClass = (text, maxLength) => {
       return String(text).length >= maxLength ? 'no-underline' : '';
     };
-    
+
     const machineSignature = this.generateUniqueBinarySignature();
     const valorEmFaltaClass = remaining > 0 ? 'data-field-red' : 'data-field-blue';
-    
+
     const createSingleReceiptHTML = () => {
       const receiptText = 'à prestação do contrato de água no valor de cinco mil Meticais.';
       return `
@@ -1391,15 +1391,15 @@ class ReceiptManager {
       </div>
       `;
     };
-    
+
     const receiptTitle = String(client.id).padStart(3, '0');
     this.openReceiptInNewWindow(createSingleReceiptHTML(), receiptTitle);
   }
-  
+
   static openReceiptInNewWindow(htmlContent, title) {
     const safeTitle = title || 'Recibo de Pagamento';
     const newWindow = window.open('', '_blank', 'width=800,height=600');
-    
+
     const printStyle = `
       @media print {
         body {
@@ -1625,7 +1625,7 @@ class ReceiptManager {
         }
       }
     `;
-    
+
     newWindow.document.open();
     newWindow.document.write(`
       <!DOCTYPE html>
@@ -1657,7 +1657,7 @@ class EventManager {
   static init() {
     // Menu
     DOM.menuButton.addEventListener('click', () => DOM.sideMenu.classList.toggle('open'));
-    
+
     // Autenticação
     DOM.authForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1670,13 +1670,13 @@ class EventManager {
       }
       DOM.verificationCodeInput.value = '';
     });
-    
+
     // Ações do administrador
     DOM.adminActions.addEventListener('click', (e) => {
       if (e.target.tagName !== 'BUTTON') return;
       const action = e.target.dataset.action;
       const view = e.target.dataset.view;
-      
+
       if (action === 'add-client') {
         this.openClientModal();
       } else if (action === 'add-contract') {
@@ -1686,12 +1686,12 @@ class EventManager {
       } else if (action === 'import-data') {
         DOM.importFileInput.click();
       }
-      
+
       if (view) {
         DOM.views.forEach(v => v.classList.add('hidden'));
         document.getElementById(view).classList.remove('hidden');
         DOM.sideMenu.classList.remove('open');
-        
+
         if (view === 'clients-view') UIManager.renderClientsTable();
         if (view === 'invoices-view') UIManager.renderInvoicesTable();
         if (view === 'payments-view') UIManager.renderPaymentsTable();
@@ -1700,52 +1700,52 @@ class EventManager {
         if (view === 'messages-view') UIManager.renderMessagesTable();
       }
     });
-    
+
     // Modal Cliente
     DOM.closeClientModalButton.addEventListener('click', () => DOM.clientModal.classList.add('hidden'));
     DOM.clientModal.addEventListener('click', (e) => {
       if (e.target === DOM.clientModal) DOM.clientModal.classList.add('hidden');
     });
-    
+
     // Formulário Cliente
     DOM.clientForm.addEventListener('submit', (e) => this.handleClientFormSubmit(e));
-    
+
     // Tabela Clientes
     DOM.clientsTableBody.addEventListener('click', (e) => this.handleClientsTableClick(e));
     DOM.clientsTableBody.addEventListener('change', (e) => this.handleSituacaoChange(e));
-    
+
     // Tabela Faturas
     DOM.invoicesTableBody.addEventListener('focus', (e) => this.handleCellEdit(e), true);
     DOM.invoicesTableBody.addEventListener('blur', (e) => this.handleCellEdit(e), true);
     DOM.invoicesTableBody.addEventListener('keydown', (e) => this.handleCellEdit(e));
-    
+
     // Tabela Pagamentos
     DOM.paymentsTableBody.addEventListener('click', (e) => this.handlePaymentsTableClick(e));
-    
+
     // Tabela Contratos
     DOM.contractsTableBody.addEventListener('click', (e) => this.handleContractsTableClick(e));
-    
+
     // Buscas
     DOM.clientSearchClients.addEventListener('input', Utils.debounce(() => UIManager.renderClientsTable(), 300));
     DOM.clientSearchPayments.addEventListener('input', Utils.debounce(() => UIManager.renderPaymentsTable(), 300));
     DOM.invoiceSearch.addEventListener('input', Utils.debounce(() => UIManager.renderInvoicesTable(), 300));
-    
+
     // Importação/Exportação
     DOM.importFileInput.addEventListener('change', (e) => DataManager.importDataFromFile(e));
     DOM.importInvoiceFileInput.addEventListener('change', (e) => DataManager.importInvoiceDataFromFile(e));
-    
+
     // Recibos
     DOM.newMonthButton.addEventListener('click', () => this.handleNewMonth());
     DOM.editReceiptOrderButton.addEventListener('click', () => this.handleEditReceiptOrder());
     DOM.generateReceiptsByRangeButton.addEventListener('click', () => this.handleGenerateReceiptsByRange());
-    
+
     // Modal Contrato
     DOM.closeContractModalButton.addEventListener('click', () => DOM.contractModal.classList.add('hidden'));
     DOM.contractModal.addEventListener('click', (e) => {
       if (e.target === DOM.contractModal) DOM.contractModal.classList.add('hidden');
     });
     DOM.contractForm.addEventListener('submit', (e) => this.handleContractFormSubmit(e));
-    
+
     // Botão de importação de leituras
     if (DOM.importInvoiceButton) {
       DOM.importInvoiceButton.addEventListener('click', () => {
@@ -1753,31 +1753,31 @@ class EventManager {
           DOM.importInvoiceFileInput.click();
         });
       });
-      
+
       // Atualizar texto do botão
       DOM.importInvoiceButton.textContent = 'Importar Leituras (TXT/CSV)';
       DOM.importInvoiceButton.title = 'Importar leituras de ficheiros TXT ou CSV';
     }
-    
+
     // Atualizar input file
     if (DOM.importInvoiceFileInput) {
       DOM.importInvoiceFileInput.accept = '.txt,.csv,.TXT,.CSV';
       DOM.importInvoiceFileInput.title = 'Selecione um ficheiro TXT ou CSV';
     }
-    
+
     // Adicionar botão de exportação de leituras
     this.addExportReadingsButton();
-    
+
     // Eventos para mensagens
     DOM.selectAllDebtButton.addEventListener('click', () => this.handleSelectAllDebt());
     DOM.generateMessagesButton.addEventListener('click', () => this.handleGenerateMessages());
     DOM.selectAllCheckbox.addEventListener('change', (e) => this.handleSelectAllCheckbox(e));
   }
-  
+
   static openClientModal(client = null) {
     DOM.clientModalTitle.textContent = client ? 'Editar Cliente' : 'Adicionar Cliente';
     DOM.clientForm.reset();
-    
+
     if (client) {
       DOM.clientIdInput.value = client.id;
       DOM.clientNameInput.value = client.name;
@@ -1786,16 +1786,16 @@ class EventManager {
     } else {
       DOM.clientIdInput.value = '';
     }
-    
+
     DOM.clientModal.classList.remove('hidden');
   }
-  
+
   static openContractModal(contract = null) {
     DOM.contractForm.reset();
     DOM.contractIdInput.value = '';
     DOM.contractModalTitle.textContent = 'Adicionar Contrato';
     DOM.contractValueInput.value = 5000;
-    
+
     DOM.contractClientSelect.innerHTML = '<option value="">Selecione um cliente</option>';
     state.clients.forEach(client => {
       const hasContract = Object.values(state.contracts).some(c => c.clientId === client.id);
@@ -1808,13 +1808,13 @@ class EventManager {
       }
       DOM.contractClientSelect.appendChild(option);
     });
-    
+
     DOM.contractModal.classList.remove('hidden');
   }
-  
+
   static handleClientFormSubmit(e) {
     e.preventDefault();
-    
+
     const clientData = {
       name: DOM.clientNameInput.value.trim(),
       contact: DOM.clientContactInput.value.trim(),
@@ -1822,15 +1822,15 @@ class EventManager {
       situacao: 'A',
       situationChangeDate: null
     };
-    
+
     const errors = Utils.validateClientData(clientData);
     if (errors.length > 0) {
       alert('Erros de validação:\n' + errors.join('\n'));
       return;
     }
-    
+
     const id = DOM.clientIdInput.value;
-    
+
     AuthService.requestVerification(() => {
       if (id) {
         // Editar cliente existente
@@ -1846,26 +1846,26 @@ class EventManager {
         state.invoices[newId] = { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
         state.payments[newId] = { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
       }
-      
+
       DataManager.save();
       UIManager.renderAllTables();
       DOM.clientModal.classList.add('hidden');
     });
   }
-  
+
   static handleClientsTableClick(e) {
     const target = e.target;
-    
+
     if (target.classList.contains('action-toggle')) {
       target.nextElementSibling.classList.toggle('visible');
       return;
     }
-    
+
     const action = target.dataset.action;
     const id = target.dataset.id;
-    
+
     if (!action || !id) return;
-    
+
     if (action === 'edit') {
       const client = state.clients.find(c => c.id == id);
       if (client) {
@@ -1877,14 +1877,14 @@ class EventManager {
           state.clients = state.clients.filter(c => c.id != id);
           delete state.invoices[id];
           delete state.payments[id];
-          
+
           // Remover contratos associados
           for (const contractId in state.contracts) {
             if (state.contracts[contractId].clientId == id) {
               delete state.contracts[contractId];
             }
           }
-          
+
           DataManager.save();
           UIManager.renderAllTables();
         });
@@ -1894,18 +1894,18 @@ class EventManager {
         AuthService.requestVerification(() => {
           const invoice = state.invoices[id] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
           const payment = state.payments[id] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
-          
+
           const { totalToPay } = Calculator.calculateInvoice(id, invoice, state.clients.find(c => c.id == id)?.situacao || 'A');
           const totalPaid = Calculator.calculatePayments(payment);
           const remainingAmount = totalToPay - totalPaid;
-          
+
           state.invoices[id].debt = remainingAmount > 0 ? remainingAmount : 0;
           state.invoices[id].prevReading = 0;
           state.invoices[id].currentReading = 0;
           state.invoices[id].customAmount = null;
-          
+
           state.payments[id] = { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
-          
+
           DataManager.save();
           UIManager.renderAllTables();
           alert(`Contador para o cliente #${id} foi trocado com sucesso. Leituras zeradas e dívida atualizada.`);
@@ -1913,24 +1913,24 @@ class EventManager {
       }
     }
   }
-  
+
   static handleSituacaoChange(e) {
     const select = e.target;
     if (!select.classList.contains('situacao-select')) return;
-    
+
     const clientId = select.dataset.clientId;
     const newSituacao = select.value;
     const client = state.clients.find(c => c.id == clientId);
-    
+
     if (!client) return;
-    
+
     const originalSituacao = client.situacao || 'A';
     const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
     const payment = state.payments[clientId] || { p1: { amount: 0 }, p2: { amount: 0 }, p3: { amount: 0 } };
-    
+
     AuthService.requestVerification(() => {
       client.situacao = newSituacao;
-      
+
       // REGISTRAR DATA DA ALTERAÇÃO DE SITUAÇÃO (A ↔ F)
       if ((originalSituacao === 'A' && newSituacao === 'F') || (originalSituacao === 'F' && newSituacao === 'A')) {
         client.situationChangeDate = new Date().toISOString();
@@ -1938,12 +1938,12 @@ class EventManager {
         // Se não é alteração entre A e F, limpar a data
         client.situationChangeDate = null;
       }
-      
+
       if (newSituacao === 'N') {
         const { totalToPay } = Calculator.calculateInvoice(clientId, invoice, newSituacao);
         const totalPaid = Calculator.calculatePayments(payment);
         const valorEmFalta = totalToPay - totalPaid;
-        
+
         invoice.customAmount = valorEmFalta + CONFIG.TARIFAS.CONSUMO_MINIMO;
         invoice.debt = 0;
       } else if (originalSituacao === 'N' && newSituacao !== 'N') {
@@ -1954,7 +1954,7 @@ class EventManager {
         const { totalToPay } = Calculator.calculateInvoice(clientId, invoice, 'A');
         const totalPaid = Calculator.calculatePayments(payment);
         const valorEmFalta = totalToPay - totalPaid;
-        
+
         // Passar o valor total para dívida, mas manter as leituras
         invoice.debt = valorEmFalta > 0 ? valorEmFalta : 0;
         invoice.customAmount = null;
@@ -1964,18 +1964,18 @@ class EventManager {
         invoice.customAmount = null;
         // As leituras já estão mantidas, não fazemos nada
       }
-      
+
       DataManager.save();
       UIManager.renderAllTables();
     }, () => {
       select.value = originalSituacao;
     });
   }
-  
+
   static handleCellEdit(e) {
     const cell = e.target.closest('td[contenteditable="true"]');
     if (!cell) return;
-    
+
     if (e.type === 'focus') {
       originalCellValue = cell.textContent.trim();
     } else if (e.type === 'blur') {
@@ -1992,25 +1992,25 @@ class EventManager {
       cell.blur();
     }
   }
-  
+
   static updateStateFromCell(cell, value) {
     const clientId = cell.dataset.clientId;
     const field = cell.dataset.field;
     const client = state.clients.find(c => c.id == clientId);
-    
+
     if (!client || !field) {
       UIManager.renderAllTables();
       return;
     }
-    
+
     const parsedValue = Utils.parseNumber(value);
-    
+
     if ((client.situacao === 'F' || client.situacao === 'N') && (field === 'prevReading' || field === 'currentReading')) {
       alert(`Não é possível alterar as leituras de um cliente com a situação "${client.situacao}".`);
       UIManager.renderInvoicesTable();
       return;
     }
-    
+
     if (field === 'currentReading') {
       const currentInvoice = state.invoices[clientId];
       const prevReading = currentInvoice ? (currentInvoice.prevReading || 0) : 0;
@@ -2020,7 +2020,7 @@ class EventManager {
         return;
       }
     }
-    
+
     if (['prevReading', 'currentReading', 'debt', 'customAmount'].includes(field)) {
       if (field === 'customAmount') {
         const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
@@ -2031,77 +2031,77 @@ class EventManager {
           state.invoices[clientId] = { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
         }
         state.invoices[clientId][field] = parsedValue;
-        
+
         if (field === 'currentReading' || field === 'debt') {
           state.invoices[clientId].customAmount = null;
         }
       }
-      
+
       DataManager.save();
       UIManager.renderInvoicesTable();
       UIManager.renderPaymentsTable();
     }
   }
-  
+
   static handlePaymentsTableClick(e) {
     const target = e.target;
-    
+
     // Verificar se é botão de gerar recibo para um pagamento específico
     if (target.classList.contains('btn-receipt')) {
       const cell = target.closest('.payment-cell');
       if (!cell) return;
-      
+
       const clientId = cell.dataset.clientId;
       const field = target.dataset.field;
       const payment = state.payments[clientId] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
-      
+
       // Verificar se há valor no pagamento
       if (!payment[field] || payment[field].amount === 0) {
         alert(`Não existe nenhum pagamento registado no ${field.replace('p', '')}º pagamento para gerar recibo.`);
         return;
       }
-      
+
       ReceiptManager.generateReceipt(clientId, field);
       return;
     }
-    
+
     // Código existente para editar pagamentos
     const cell = target.closest('.payment-cell');
     if (!cell) return;
-    
+
     // Se clicou no valor do pagamento (para editar)
     if (target.classList.contains('payment-cell-value')) {
       const clientId = cell.dataset.clientId;
       const field = cell.dataset.field;
       const payment = state.payments[clientId] || { p1: { amount: 0, date: null }, p2: { amount: 0, date: null }, p3: { amount: 0, date: null } };
       const currentAmount = payment[field].amount || 0;
-      
+
       AuthService.requestVerification(() => {
         const newAmountStr = prompt(`Insira o novo valor para o ${field.replace('p', '')}º pagamento:`, currentAmount);
         if (newAmountStr === null) return;
-        
+
         const newAmount = Utils.parseNumber(newAmountStr);
         if (isNaN(newAmount)) {
           alert("Valor inválido. Por favor, insira um número.");
           return;
         }
-        
+
         const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
         const client = state.clients.find(c => c.id == clientId);
         const { totalToPay } = Calculator.calculateInvoice(clientId, invoice, client?.situacao || 'A');
-        
+
         const paymentsExceptCurrent = Object.keys(payment)
           .filter(key => key !== field)
           .reduce((sum, key) => sum + (payment[key].amount || 0), 0);
-        
+
         // Permitir qualquer valor (incluindo adiantamentos)
         payment[field].amount = newAmount;
         payment[field].date = (newAmount > 0) ? new Date().toISOString() : null;
-        
+
         DataManager.save();
         UIManager.renderPaymentsTable();
         UIManager.renderInvoicesTable();
-        
+
         // Informar sobre créditos se pagou mais do que deve
         if (paymentsExceptCurrent + newAmount > totalToPay) {
           const credito = (paymentsExceptCurrent + newAmount) - totalToPay;
@@ -2110,12 +2110,12 @@ class EventManager {
       });
     }
   }
-  
+
   static handleContractsTableClick(e) {
     const target = e.target;
     const action = target.dataset.action;
     const contractId = target.dataset.id;
-    
+
     if (action === 'delete-contract') {
       if (confirm(`Tem a certeza que deseja remover o contrato #${contractId}? Esta ação não pode ser desfeita.`)) {
         AuthService.requestVerification(() => {
@@ -2130,78 +2130,78 @@ class EventManager {
       // CORREÇÃO: Permitir edição direta dos valores de pagamento dos contratos
       const cell = target.closest('.payment-cell');
       if (!cell) return;
-      
+
       const contractId = cell.dataset.contractId;
       const field = cell.dataset.field;
       const contract = state.contracts[contractId];
       if (!contract) return;
-      
+
       // Se clicou no valor do pagamento (para editar)
       if (target.classList.contains('payment-cell-value')) {
         const currentAmount = contract.payments[field].amount || 0;
-        
+
         AuthService.requestVerification(() => {
           const newAmountStr = prompt(`Insira o novo valor para o ${field.replace('p', '')}º pagamento do contrato:`, currentAmount);
           if (newAmountStr === null) return;
-          
+
           const newAmount = Utils.parseNumber(newAmountStr);
           if (isNaN(newAmount)) {
             alert("Valor inválido. Por favor, insira um número.");
             return;
           }
-          
+
           const paymentsExceptCurrent = Object.keys(contract.payments)
             .filter(key => key !== field)
             .reduce((sum, key) => sum + (contract.payments[key].amount || 0), 0);
-          
+
           // CORREÇÃO: NÃO PERMITIR VALOR ACIMA DO CONTRATO
           if (paymentsExceptCurrent + newAmount > contract.value) {
             const valorAtual = paymentsExceptCurrent + currentAmount;
             const valorPermitido = contract.value - paymentsExceptCurrent;
             alert(`O valor total dos pagamentos não pode exceder o valor do contrato.\n\n` +
-                  `Valor atual dos pagamentos: ${valorAtual.toFixed(2)} MT\n` +
-                  `Valor do contrato: ${contract.value.toFixed(2)} MT\n` +
-                  `Valor máximo permitido para este pagamento: ${valorPermitido.toFixed(2)} MT`);
+              `Valor atual dos pagamentos: ${valorAtual.toFixed(2)} MT\n` +
+              `Valor do contrato: ${contract.value.toFixed(2)} MT\n` +
+              `Valor máximo permitido para este pagamento: ${valorPermitido.toFixed(2)} MT`);
             return;
           }
-          
+
           contract.payments[field].amount = newAmount;
           contract.payments[field].date = (newAmount > 0) ? new Date().toISOString() : null;
-          
+
           DataManager.save();
           UIManager.renderContractsTable();
         });
       }
     }
   }
-  
+
   static handleContractFormSubmit(e) {
     e.preventDefault();
-    
+
     const clientId = parseInt(DOM.contractClientSelect.value);
     const contractValue = Utils.parseNumber(DOM.contractValueInput.value);
-    
+
     if (isNaN(clientId) || !clientId) {
       alert("Por favor, selecione um cliente.");
       return;
     }
-    
+
     if (isNaN(contractValue) || contractValue <= 0) {
       alert("Por favor, insira um valor de contrato válido.");
       return;
     }
-    
+
     const existingContract = Object.values(state.contracts).find(c => c.clientId === clientId);
     if (existingContract) {
       alert("Este cliente já possui um contrato.");
       return;
     }
-    
+
     AuthService.requestVerification(() => {
       const existingContractIds = Object.keys(state.contracts).map(Number);
       const maxId = existingContractIds.length > 0 ? Math.max(...existingContractIds) : 1000;
       const newContractId = maxId + 1;
-      
+
       state.contracts[newContractId] = {
         id: newContractId,
         clientId: clientId,
@@ -2212,91 +2212,91 @@ class EventManager {
           p3: { amount: 0, date: null }
         }
       };
-      
+
       DataManager.save();
       UIManager.renderContractsTable();
       DOM.contractModal.classList.add('hidden');
     });
   }
-  
+
   static handleNewMonth() {
     const clientsWithoutCurrentReading = state.clients.filter(client =>
       client.situacao === 'A' && (!state.invoices[client.id] || !state.invoices[client.id].currentReading)
     );
-    
+
     if (clientsWithoutCurrentReading.length > 0) {
       const clientNames = clientsWithoutCurrentReading.map(c => c.name).join(', ');
       alert(`Não é possível iniciar um novo mês. Os seguintes clientes com situação 'A' não têm leitura atual: ${clientNames}.`);
       return;
     }
-    
+
     if (confirm("Tem a certeza que deseja iniciar um novo mês? Esta ação irá arquivar os valores atuais e não pode ser desfeita.")) {
       AuthService.requestVerification(() => {
         state.clients.forEach(client => {
           const clientId = client.id;
           const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
           const payment = state.payments[clientId] || { p1: { amount: 0 }, p2: { amount: 0 }, p3: { amount: 0 } };
-          
+
           // ALTERAÇÃO: Se o cliente está Fechado, NÃO fazer nada nas leituras
           if (client.situacao === 'F') {
             console.log(`Cliente ${clientId} está Fechado. Ignorando no novo mês.`);
             return;
           }
-          
+
           const { totalToPay } = Calculator.calculateInvoice(clientId, invoice, client.situacao);
           const totalPaid = Calculator.calculatePayments(payment);
           const remainingAmount = totalToPay - totalPaid;
-          
+
           // CORREÇÃO CRÍTICA: Para TODOS os clientes (exceto Fechados), 
           // a leitura atual deve passar para a leitura anterior
           // E a leitura atual deve ser zerada para o próximo mês
-          
+
           // CORREÇÃO: Transferir a leitura atual para a leitura anterior
           state.invoices[clientId].prevReading = invoice.currentReading || 0;
-          
+
           // CORREÇÃO: Zerar a leitura atual para o novo mês
           state.invoices[clientId].currentReading = 0;
-          
+
           // CORREÇÃO: Manter créditos (valores negativos) na dívida
           // Se o cliente pagou a mais (remainingAmount < 0), manter esse crédito
           state.invoices[clientId].debt = remainingAmount; // Pode ser negativo (crédito)
-          
+
           state.invoices[clientId].customAmount = null;
-          
+
           // CORREÇÃO: Para clientes Não, ajustar a dívida corretamente
           if (client.situacao === 'N') {
             // Para clientes "Não", a dívida deve ser o valor em falta + consumo mínimo
             state.invoices[clientId].debt = (remainingAmount > 0 ? remainingAmount : 0) + CONFIG.TARIFAS.CONSUMO_MINIMO;
           }
-          
+
           // CORREÇÃO: Zerar todos os pagamentos
-          state.payments[clientId] = { 
-            p1: { amount: 0, date: null }, 
-            p2: { amount: 0, date: null }, 
-            p3: { amount: 0, date: null } 
+          state.payments[clientId] = {
+            p1: { amount: 0, date: null },
+            p2: { amount: 0, date: null },
+            p3: { amount: 0, date: null }
           };
         });
-        
+
         DataManager.save();
         UIManager.renderAllTables();
         alert('Novo mês iniciado com sucesso! Leituras transferidas, dívidas atualizadas e pagamentos zerados.');
       });
     }
   }
-  
+
   static handleEditReceiptOrder() {
     const currentOrderStr = state.receiptOrder.join(', ');
     const newOrderStr = prompt("Edite a sequência de IDs dos clientes, separados por vírgula:", currentOrderStr);
-    
+
     if (newOrderStr === null) return;
-    
+
     const newOrderArray = newOrderStr
       .split(',')
       .map(s => s.trim())
       .filter(s => s !== '')
       .map(s => parseInt(s, 10))
       .filter(num => !isNaN(num));
-    
+
     AuthService.requestVerification(() => {
       state.receiptOrder = newOrderArray;
       DataManager.save();
@@ -2304,33 +2304,33 @@ class EventManager {
       alert('Ordem da lista atualizada com sucesso!');
     });
   }
-  
+
   static handleGenerateReceiptsByRange() {
     const startId = parseInt(DOM.clientStartIdInput.value);
     const endId = parseInt(DOM.clientEndIdInput.value);
-    
+
     if (isNaN(startId) || isNaN(endId)) {
       alert('Por favor, insira um ID de cliente inicial e final válidos.');
       return;
     }
-    
+
     if (startId <= 0 || endId <= 0) {
       alert('Os IDs dos clientes devem ser maiores que zero.');
       return;
     }
-    
+
     if (startId > endId) {
       alert('O ID inicial não pode ser maior que o ID final.');
       return;
     }
-    
+
     UIManager.renderReceipts(startId, endId);
   }
-  
+
   static addExportReadingsButton() {
     // Verificar se o botão já existe
     if (document.getElementById('export-readings-button')) return;
-    
+
     // Criar botão
     const exportButton = document.createElement('button');
     exportButton.id = 'export-readings-button';
@@ -2338,23 +2338,23 @@ class EventManager {
     exportButton.className = 'btn btn-secondary';
     exportButton.type = 'button';
     exportButton.style.marginLeft = '10px';
-    
+
     // Adicionar evento
     exportButton.addEventListener('click', () => {
       DataManager.exportReadingsToCSV();
     });
-    
+
     // Adicionar ao DOM
     if (DOM.importInvoiceButton && DOM.importInvoiceButton.parentNode) {
       DOM.importInvoiceButton.parentNode.insertBefore(exportButton, DOM.importInvoiceButton.nextSibling);
     }
-    
+
     // Guardar referência
     DOM.exportReadingsButton = exportButton;
   }
-  
+
   // ================ FUNÇÕES PARA MENSAGENS ================
-  
+
   static handleSelectAllDebt() {
     const checkboxes = document.querySelectorAll('.client-checkbox:not(:disabled)');
     checkboxes.forEach(checkbox => {
@@ -2362,7 +2362,7 @@ class EventManager {
       const client = state.clients.find(c => c.id == clientId);
       const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
       const { totalToPay } = Calculator.calculateInvoice(clientId, invoice, client.situacao);
-      
+
       // Selecionar apenas se tiver valor a pagar > 0
       if (totalToPay > 0) {
         checkbox.checked = true;
@@ -2370,26 +2370,26 @@ class EventManager {
     });
     DOM.selectAllCheckbox.checked = true;
   }
-  
+
   static handleSelectAllCheckbox(e) {
     const checkboxes = document.querySelectorAll('.client-checkbox:not(:disabled)');
     checkboxes.forEach(checkbox => {
       checkbox.checked = e.target.checked;
     });
   }
-  
+
   static handleGenerateMessages() {
     const selectedCheckboxes = document.querySelectorAll('.client-checkbox:checked');
-    
+
     if (selectedCheckboxes.length === 0) {
       alert('Por favor, selecione pelo menos um cliente.');
       return;
     }
-    
+
     // Mapeamento dos meses em português
     const monthsMap = {
       'janeiro': 'janeiro',
-      'fevereiro': 'fevereiro', 
+      'fevereiro': 'fevereiro',
       'março': 'março',
       'abril': 'abril',
       'maio': 'maio',
@@ -2401,41 +2401,41 @@ class EventManager {
       'novembro': 'novembro',
       'dezembro': 'dezembro'
     };
-    
+
     // Calcular nome do mês anterior
     const currentDate = new Date();
     const previousMonthDate = new Date(currentDate);
     previousMonthDate.setMonth(currentDate.getMonth() - 1);
     const monthNamePt = previousMonthDate.toLocaleString('pt-BR', { month: 'long' }).toLowerCase();
     const monthName = monthsMap[monthNamePt] || monthNamePt;
-    
+
     // Formatar o mês para exibição (WhatsApp) - primeira letra maiúscula
     const monthNameDisplay = monthName.charAt(0).toUpperCase() + monthName.slice(1);
     // Formatar o mês para SMS - todas maiúsculas
     const monthNameSMS = monthName.toUpperCase();
-    
+
     DOM.messagesList.innerHTML = '';
     let messageCount = 0;
-    
+
     selectedCheckboxes.forEach(checkbox => {
       const clientId = checkbox.dataset.clientId;
       const client = state.clients.find(c => c.id == clientId);
       if (!client) return;
-      
+
       const invoice = state.invoices[clientId] || { prevReading: 0, currentReading: 0, debt: 0, customAmount: null };
       const { totalToPay, consumption } = Calculator.calculateInvoice(clientId, invoice, client.situacao);
-      
+
       // Formatar ID do cliente com 3 dígitos
       const formattedClientId = String(client.id).padStart(3, '0');
-      
+
       // Calcular valores
       const debtValue = invoice.debt || 0;
       const consumoMensalValor = Math.max(0, totalToPay - debtValue);
-      
+
       // Leitura anterior e atual
       const leituraAnterior = invoice.prevReading || 0;
       const leituraAtual = invoice.currentReading || 0;
-      
+
       // MENSAGEM PARA WHATSAPP (formato mais completo e formatado)
       const whatsappMessage = `Segue a informação referente à fatura de água do mês de ${monthNameDisplay}.
 
@@ -2462,7 +2462,7 @@ M-Pesa: 844582022 (António Rafael)
 M-Mola: 874042742 (Sara)
 
 Após o pagamento, envie o comprovativo por este meio.`;
-      
+
       // MENSAGEM PARA SMS (formato compacto)
       const smsMessage = `FATURA DE ÁGUA - ${monthNameSMS}
 
@@ -2483,14 +2483,14 @@ M-Pesa: 844582022 (António Rafael)
 M-Mola: 874042742 (Sara)
 
 Favor enviar o comprovativo após o pagamento.`;
-      
+
       // Codificar as mensagens para URL
       const encodedWhatsappMessage = encodeURIComponent(whatsappMessage);
       const encodedSMSMessage = encodeURIComponent(smsMessage);
-      
+
       const whatsappLink = `https://wa.me/258${client.contact}?text=${encodedWhatsappMessage}`;
       const smsLink = `sms:258${client.contact}?body=${encodedSMSMessage}`;
-      
+
       // Criar elemento da mensagem
       const messageElement = document.createElement('div');
       messageElement.className = 'message-item';
@@ -2499,7 +2499,7 @@ Favor enviar o comprovativo após o pagamento.`;
       messageElement.style.border = '1px solid #ddd';
       messageElement.style.borderRadius = '5px';
       messageElement.style.backgroundColor = '#fff';
-      
+
       messageElement.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
           <h4 style="margin: 0;">${client.name} (ID: ${client.id})</h4>
@@ -2571,16 +2571,16 @@ Favor enviar o comprovativo após o pagamento.`;
         
         <hr style="margin: 1rem 0;">
       `;
-      
+
       DOM.messagesList.appendChild(messageElement);
       messageCount++;
     });
-    
+
     DOM.messagesOutput.style.display = 'block';
-    
+
     // Scroll para a área de mensagens
     DOM.messagesOutput.scrollIntoView({ behavior: 'smooth' });
-    
+
     // Mostrar resumo
     const summary = document.createElement('div');
     summary.className = 'message-summary';
@@ -2596,7 +2596,7 @@ Favor enviar o comprovativo após o pagamento.`;
       <p>📱 Use os botões SMS ou WhatsApp para enviar a mensagem para cada cliente.</p>
       <p><strong>Nota:</strong> As mensagens são geradas automaticamente com os dados do mês anterior (${monthNameDisplay}).</p>
     `;
-    
+
     DOM.messagesList.insertBefore(summary, DOM.messagesList.firstChild);
   }
 }
@@ -2606,17 +2606,17 @@ function init() {
   try {
     // Carregar dados
     DataManager.load();
-    
+
     // Inicializar eventos
     EventManager.init();
-    
+
     // Renderizar interface
     UIManager.renderAllTables();
-    
+
     // Mostrar vista inicial
     DOM.views.forEach(v => v.classList.add('hidden'));
     document.getElementById('clients-view').classList.remove('hidden');
-    
+
     console.log('Aplicação inicializada com sucesso');
   } catch (error) {
     console.error('Erro na inicialização:', error);
