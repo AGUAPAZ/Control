@@ -238,6 +238,9 @@ class Calculator {
         tariff = consumption <= CONFIG.TARIFAS.LIMITE_CONSUMO_MINIMO
           ? CONFIG.TARIFAS.CONSUMO_MINIMO
           : consumption * CONFIG.TARIFAS.VALOR_M3;
+      } else {
+        // Caso a leitura atual seja menor que a anterior (não esperado), considera tarifa zero
+        tariff = 0;
       }
 
       totalToPay = Utils.parseNumber(invoice.debt) + tariff;
@@ -2436,6 +2439,14 @@ class EventManager {
       const leituraAnterior = invoice.prevReading || 0;
       const leituraAtual = invoice.currentReading || 0;
 
+      // Exibição da dívida com tratamento para crédito (negativo)
+      let debtDisplay;
+      if (debtValue < 0) {
+        debtDisplay = `Crédito: ${Math.abs(debtValue).toFixed(2)}`;
+      } else {
+        debtDisplay = `Dívida: ${debtValue.toFixed(2)}`;
+      }
+
       // MENSAGEM PARA WHATSAPP (formato mais completo e formatado)
       const whatsappMessage = `Segue a informação referente à fatura de água do mês de ${monthNameDisplay}.
 
@@ -2448,7 +2459,7 @@ Total a Pagar: ${totalToPay.toFixed(2)} MT
 Detalhamento:
 
 Consumo Mensal: ${consumoMensalValor.toFixed(2)} MT
-Dívida Anterior: ${debtValue.toFixed(2)} MT
+${debtDisplay}
 
 Leituras:
 
@@ -2471,7 +2482,7 @@ Contador: ${formattedClientId}
 TOTAL A PAGAR: ${totalToPay.toFixed(2)} MT
 
 Consumo: ${consumoMensalValor.toFixed(2)} MT
-Dívida: ${debtValue.toFixed(2)} MT
+${debtDisplay.replace(':', '')} 
 
 Leituras (m³):
 Ant: ${leituraAnterior} | Atual: ${leituraAtual}
