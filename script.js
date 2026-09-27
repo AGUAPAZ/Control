@@ -69,6 +69,8 @@ const DOM = {
   // Importação
   importInvoiceButton: document.getElementById('import-invoice-data-button'),
   importInvoiceFileInput: document.getElementById('import-invoice-file-input'),
+  reimportInvoiceButton: document.getElementById('reimport-invoice-data-button'),
+  reimportInvoiceFileInput: document.getElementById('reimport-invoice-file-input'),
   importFileInput: document.getElementById('import-file-input'),
 
   // Exportação
@@ -688,6 +690,217 @@ class DataManager {
         } catch (error) {
           console.error('Erro ao importar o ficheiro:', error);
           alert(`Erro: O ficheiro selecionado não está no formato correto.\n\nDetalhes:\n${error.message}\n\nFormatos aceites:\n- TXT: número_cliente;leitura_atual;valor_total\n- CSV: número_cliente,leitura_atual,valor_total\n\nNota: Linhas com menos de 3 valores serão ignoradas.`);
+        } finally {
+          event.target.value = null;
+        }
+      };
+
+      reader.onerror = function () {
+        alert('Ocorreu um erro ao ler o ficheiro.');
+        event.target.value = null;
+      };
+
+      reader.readAsText(file, 'UTF-8');
+    });
+  }
+
+  /**
+   * REIMPORTAÇÃO / CORREÇÃO DE LEITURAS
+   * Sobrescreve leituras já existentes SEM afetar clientes que já efetuaram pagamento.
+   */
+  static reimportInvoiceDataFromFile(event) {
+    AuthService.requireAuthentication(() => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const fileName = file.name.toLowerCase();
+      const isTXT = fileName.endsWith('.txt');
+      const isCSV = fileName.endsWith('.csv');
+
+      if (!isTXT && !isCSV) {
+        alert('Formato de ficheiro não suportado. Por favor, selecione um ficheiro .txt ou .csv.');
+        event.target.value = null;
+        return;
+      }
+
+      if (!confirm(
+        '⚠️ MODO CORREÇÃO - REIMPORTAR LEITURAS\n\n' +
+        'Esta ação irá SOBRESCREVER as leituras atuais.\n\n' +
+        '• Clientes COM pagamentos registados NÃO serão alterados.\n' +
+        '• Clientes SEM pagamentos serão atualizados com os novos valores.\n\n' +
+        'Tem a certeza que deseja continuar?'
+      )) {
+        event.target.value = null;
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        try {
+          const content = e.target.result;
+          const lines = content.split('\n');
+          let importedCount = 0;
+          let errorCount = 0;
+          let skippedClients = 0;
+          let skippedHeader = false;
+
+          const errorMessages = [];
+          const skippedMessages = [];
+
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const lineNumber = i + 1;
+
+            if (line.trim() === '') continue;
+
+            const separator = isTXT ? ';' : ',';
+            const cleanLine = line.trim().replace(/["']/g, '');
+            let parts = cleanLine.split(separator);
+
+            if (parts.length < 3) {
+              const tabParts = cleanLine.split('\t');
+              if (tabParts.length >= 3) {
+                parts = tabParts;
+              }
+            }
+
+            if (parts.length < 3) {
+              errorMessages.push(`Linha ${lineNumber}: Formato inválido - menos de 3 valores encontrados.`);
+              errorCount++;
+              continue;
+            }
+
+            if (!skippedHeader && isNaN(Utils.parseNumber(parts[0]))) {
+              skippedHeader = true;
+              console.log('Cabeçalho detectado e ignorado:', line);
+              continue;
+            }
+
+            const clientId = parseInt(parts[0].trim());
+            const totalM3 = Utils.parseNumber(parts[1]);
+            const totalValue = Utils.parseNumber(parts[2]);
+
+            if (isNaN(clientId) || clientId <= 0) {
+              errorMessages.push(`Linha ${lineNumber}: ID de cliente inválido (${parts[0]})`);
+              errorCount++;
+              continue;
+            }
+
+            const client = state.clients.find(c => c.id === clientId);
+            if (!client) {
+              errorMessages.push(`Linha ${lineNumber}: Cliente com ID ${clientId} não encontrado`);
+              errorCount++;
+              continue;
+            }
+
+            // VERIFICAÇÃO CRÍTICA: Se o cliente já efetuou pagamento, NÃO alterar
+            const payment = state.payments[clientId] || {
+              p1: { amount: 0 },
+              p2: { amount: 0 },
+              p3: { amount: 0 }
+            };
+            const totalPaid = (payment.p1.amount || 0) +
+                             (payment.p2.amount || 0) +
+                             (payment.p3.amount || 0);
+
+            if (totalPaid > 0) {
+              skippedMessages.push(
+                `Cliente ${clientId} (${client.name}) ignorado: Já efetuou pagamento de ${totalPaid.toFixed(2)} MT`
+              );
+              skippedClients++;
+              continue;
+            }
+
+            // Cliente Fechado também é ignorado
+            if (client.situacao === 'F') {
+              skippedMessages.push(`Cliente ${clientId} (${client.name}) ignorado: Situação Fechado`);
+              skippedClients++;
+              continue;
+            }
+
+            // NO MODO REIMPORTAÇÃO: sobrescrever independentemente dos valores atuais
+            const currentInvoice = state.invoices[clientId] || {
+              prevReading: 0,
+              currentReading: 0,
+              debt: 0,
+              customAmount: null
+            };
+
+            const currentDebt = currentInvoice.debt || 0;
+            const prevReading = currentInvoice.prevReading || 0;
+
+            if (totalValue > 0) {
+              // Usar valor total do arquivo
+              state.invoices[clientId] = {
+                prevReading: prevReading,
+                currentReading: totalM3,
+                debt: currentDebt,
+                customAmount: totalValue
+              };
+            } else {
+              // Calcular usando leitura
+              const consumption = Math.max(0, totalM3 - prevReading);
+              let tariff = 0;
+
+              if (client.situacao === 'A') {
+                if (consumption > 0) {
+                  tariff = consumption <= CONFIG.TARIFAS.LIMITE_CONSUMO_MINIMO
+                    ? CONFIG.TARIFAS.CONSUMO_MINIMO
+                    : consumption * CONFIG.TARIFAS.VALOR_M3;
+                } else if (totalM3 === prevReading) {
+                  tariff = CONFIG.TARIFAS.CONSUMO_MINIMO;
+                }
+              } else if (client.situacao === 'N') {
+                tariff = currentDebt;
+              }
+
+              state.invoices[clientId] = {
+                prevReading: prevReading,
+                currentReading: totalM3,
+                debt: currentDebt,
+                customAmount: null
+              };
+            }
+
+            importedCount++;
+          }
+
+          DataManager.save();
+          UIManager.renderInvoicesTable();
+          UIManager.renderPaymentsTable();
+
+          let message = `🔄 REIMPORTAÇÃO CONCLUÍDA!\n\n`;
+          message += `✅ ${importedCount} clientes atualizados/corrigidos.\n`;
+          message += `⏭️ ${skippedClients} clientes ignorados (já pagaram ou fechados).\n`;
+          message += `❌ ${errorCount} erros encontrados.\n\n`;
+
+          if (skippedMessages.length > 0) {
+            message += `Clientes ignorados:\n`;
+            if (skippedMessages.length <= 8) {
+              skippedMessages.forEach(msg => message += `  • ${msg}\n`);
+            } else {
+              message += `  • ${skippedMessages.slice(0, 8).join('\n  • ')}\n`;
+              message += `  • ... e mais ${skippedMessages.length - 8} clientes\n`;
+            }
+            message += `\n`;
+          }
+
+          if (errorMessages.length > 0) {
+            message += `Erros encontrados:\n`;
+            if (errorMessages.length <= 5) {
+              errorMessages.forEach(msg => message += `  • ${msg}\n`);
+            } else {
+              message += `  • ${errorMessages.slice(0, 5).join('\n  • ')}\n`;
+              message += `  • ... e mais ${errorMessages.length - 5} erros\n`;
+            }
+          }
+
+          alert(message);
+
+        } catch (error) {
+          console.error('Erro ao reimportar o ficheiro:', error);
+          alert(`Erro: O ficheiro selecionado não está no formato correto.\n\nDetalhes:\n${error.message}\n\nFormatos aceites:\n- TXT: número_cliente;leitura_atual;valor_total\n- CSV: número_cliente,leitura_atual,valor_total`);
         } finally {
           event.target.value = null;
         }
@@ -1767,6 +1980,27 @@ class EventManager {
       DOM.importInvoiceFileInput.accept = '.txt,.csv,.TXT,.CSV';
       DOM.importInvoiceFileInput.title = 'Selecione um ficheiro TXT ou CSV';
     }
+
+    // ============ NOVO: Botão de REIMPORTAÇÃO / CORREÇÃO ============
+    if (DOM.reimportInvoiceButton) {
+      DOM.reimportInvoiceButton.addEventListener('click', () => {
+        AuthService.requireAuthentication(() => {
+          DOM.reimportInvoiceFileInput.click();
+        });
+      });
+
+      DOM.reimportInvoiceButton.title = 'Sobrescrever leituras já existentes (não altera clientes com pagamentos no mês)';
+    }
+
+    // Evento para o input de reimportação
+    if (DOM.reimportInvoiceFileInput) {
+      DOM.reimportInvoiceFileInput.addEventListener('change', (e) =>
+        DataManager.reimportInvoiceDataFromFile(e)
+      );
+      DOM.reimportInvoiceFileInput.accept = '.txt,.csv,.TXT,.CSV';
+      DOM.reimportInvoiceFileInput.title = 'Selecione um ficheiro TXT ou CSV para corrigir';
+    }
+    // ============ FIM NOVO ============
 
     // Adicionar botão de exportação de leituras
     this.addExportReadingsButton();

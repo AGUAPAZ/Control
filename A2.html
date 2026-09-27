@@ -67,11 +67,12 @@
             </section>
 
             <section id="invoices-view" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
                     <h2>Gestão de Faturas</h2>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="text" id="invoice-search" placeholder="Pesquisar por nome ou ID..." style="width: 250px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="invoice-search" placeholder="Pesquisar por nome ou ID..." style="width: 220px;">
                         <button id="import-invoice-data-button" class="btn-primary">📁 Importar Dados</button>
+                        <button id="reimport-invoice-data-button" class="btn-warning" title="Sobrescrever leituras (não altera clientes com pagamentos no mês)">🔄 Reimportar/Corrigir</button>
                         <button id="new-month-button" class="btn-warning">🚀 Novo Mês</button>
                     </div>
                 </div>
@@ -241,6 +242,7 @@
     </div>
 
     <input type="file" id="import-invoice-file-input" class="hidden" accept=".txt">
+    <input type="file" id="reimport-invoice-file-input" class="hidden" accept=".txt,.csv">
 
     <script src="script.js"></script>
 </body>
